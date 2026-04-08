@@ -1,0 +1,8 @@
+{
+  "name": "ecommerce-backend",
+  "private": true,
+  "description": "Spring Boot e-ticaret API — kökten hızlı başlatmak için npm script (isteğe bağlı)",
+  "scripts": {
+    "dev": "node scripts/start-backend.cjs"
+  }
+}

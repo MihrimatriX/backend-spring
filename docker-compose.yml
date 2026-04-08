@@ -1,0 +1,130 @@
+# Tek komut — veritabanı + migrate (Flyway) + örnek veri (V3/V4 SQL) + Redis + RabbitMQ + API:
+#   docker compose up --build -d
+#
+# Tarayıcıdan erişim (HTTP, https değil):
+#   http://127.0.0.1:8081/actuator/health
+#   http://127.0.0.1:8081/swagger-ui.html
+# Docker Desktop "Open in browser" bazen https veya yanlış host kullanır — yukarıdaki URL'yi elle deneyin.
+# Sorun giderme: docker compose ps   |   docker compose logs spring-backend --tail 80
+#
+# Host portları .env ile değiştirilebilir (varsayılanlar aşağıda).
+#
+# Sadece altyapı (API hariç): docker compose up -d postgres redis rabbitmq
+# Temiz başlangıç (VERİ SİLİNİR): docker compose down -v
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: spring-postgres
+    environment:
+      POSTGRES_DB: ecommerce_db
+      POSTGRES_USER: ecommerce_user
+      POSTGRES_PASSWORD: ecommerce_password
+    ports:
+      - "${HOST_POSTGRES_PORT:-5434}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - spring-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ecommerce_user -d ecommerce_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: spring-redis
+    ports:
+      - "${HOST_REDIS_PORT:-6380}:6379"
+    networks:
+      - spring-network
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: spring-rabbitmq
+    ports:
+      - "${HOST_RABBIT_PORT:-5673}:5672"
+      - "${HOST_RABBIT_UI_PORT:-15673}:15672"
+    networks:
+      - spring-network
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    restart: unless-stopped
+
+  # Şema + seed (V3/V4) burada uygulanır; bitince API başlar (çift migrate yok: Spring flyway kapalı)
+  flyway:
+    image: flyway/flyway:10.22.0-alpine
+    container_name: spring-flyway
+    environment:
+      FLYWAY_URL: jdbc:postgresql://postgres:5432/ecommerce_db
+      FLYWAY_USER: ecommerce_user
+      FLYWAY_PASSWORD: ecommerce_password
+      FLYWAY_LOCATIONS: filesystem:/flyway/sql
+      FLYWAY_CONNECT_RETRIES: 60
+      FLYWAY_BASELINE_ON_MIGRATE: "true"
+    volumes:
+      - ./src/main/resources/db/migration:/flyway/sql
+    command: migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - spring-network
+    restart: "no"
+
+  spring-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: spring-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_ADDRESS: 0.0.0.0
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ecommerce_db
+      SPRING_DATASOURCE_USERNAME: ecommerce_user
+      SPRING_DATASOURCE_PASSWORD: ecommerce_password
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: "6379"
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: "5672"
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+    ports:
+      - "0.0.0.0:${HOST_API_PORT:-8081}:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      flyway:
+        condition: service_completed_successfully
+    networks:
+      - spring-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  spring-network:
+    driver: bridge

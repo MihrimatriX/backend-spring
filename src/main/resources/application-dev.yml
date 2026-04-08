@@ -1,0 +1,82 @@
+# Development Environment Configuration
+server:
+  port: 8081
+
+app:
+  integration:
+    redis: false
+  messaging:
+    enabled: false
+  ecommerce:
+    demo-fulfillment-enabled: true
+
+spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+      - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
+
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 20000
+      idle-timeout: 300000
+      max-lifetime: 1200000
+
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+        use_sql_comments: true
+
+  # H2 Console (enabled for development)
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  # Flyway Database Migration (disabled for H2)
+  flyway:
+    enabled: false
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.ecommerce.backend: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.springframework.transaction: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [cid=%X{correlationId:-}] %logger{40} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [cid=%X{correlationId:-}] %logger{40} - %msg%n"
+
+management:
+  health:
+    redis:
+      enabled: false
+    rabbit:
+      enabled: false
+
+# Development specific settings
+dev:
+  data-seeder:
+    enabled: true
+  swagger:
+    enabled: true
+  debug:
+    enabled: true
