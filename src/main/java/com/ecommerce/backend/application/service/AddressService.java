@@ -1,182 +1,128 @@
 package com.ecommerce.backend.application.service;
 
-import com.ecommerce.backend.application.dto.*;
-import com.ecommerce.backend.domain.entity.*;
-import com.ecommerce.backend.infrastructure.repository.*;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.ecommerce.backend.application.dto.AddressDto;
+import com.ecommerce.backend.application.dto.CreateAddressDto;
+import com.ecommerce.backend.application.dto.UpdateAddressDto;
+import com.ecommerce.backend.application.exception.ApiException;
+import com.ecommerce.backend.domain.entity.Address;
+import com.ecommerce.backend.infrastructure.repository.AddressRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
+/**
+ * Adresler — docs/API_CONTRACT.md §4.8. Tüm işlemler çağıran kullanıcının adresleriyle
+ * sınırlıdır; başkasının adresi "bulunamadı" (404) sayılır.
+ */
 @Service
+@RequiredArgsConstructor
 @Transactional
 public class AddressService {
 
-    @Autowired
-    private AddressRepository addressRepository;
+    static final String DEFAULT_COUNTRY = "Turkey";
 
-    public BaseResponseDto<List<AddressDto>> getUserAddresses(Long userId) {
-        try {
-            List<Address> addresses = addressRepository
-                    .findByUserIdAndIsActiveTrueOrderByIsDefaultDescCreatedAtDesc(userId);
-            List<AddressDto> addressDtos = addresses.stream()
-                    .map(this::convertToAddressDto)
-                    .collect(Collectors.toList());
+    private final AddressRepository addressRepository;
 
-            return BaseResponseDto.success("Addresses retrieved successfully", addressDtos);
-        } catch (Exception ex) {
-            return BaseResponseDto.error("Error retrieving addresses: " + ex.getMessage());
+    /** Varsayılan önce, sonra en yeni. */
+    @Transactional(readOnly = true)
+    public List<AddressDto> getUserAddresses(Long userId) {
+        return addressRepository.findByUserIdAndIsActiveTrueOrderByIsDefaultDescCreatedAtDescIdDesc(userId).stream()
+                .map(AddressDto::from)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public AddressDto getAddress(Long addressId, Long userId) {
+        return AddressDto.from(require(addressId, userId));
+    }
+
+    /** Kullanıcının ilk adresi otomatik varsayılan olur; {@code isDefault:true} diğerlerini kaldırır. */
+    public AddressDto createAddress(Long userId, CreateAddressDto dto) {
+        boolean makeDefault = Boolean.TRUE.equals(dto.getIsDefault())
+                || !addressRepository.existsByUserIdAndIsActiveTrue(userId);
+        if (makeDefault) {
+            clearDefault(userId, null);
+        }
+        Address address = new Address();
+        address.setUserId(userId);
+        address.setTitle(dto.getTitle());
+        address.setFullAddress(dto.getFullAddress());
+        address.setCity(dto.getCity());
+        address.setDistrict(dto.getDistrict());
+        address.setPostalCode(dto.getPostalCode());
+        address.setCountry(countryOrDefault(dto.getCountry()));
+        address.setIsDefault(makeDefault);
+        address.setPhoneNumber(dto.getPhoneNumber());
+        address.setIsActive(true);
+        return AddressDto.from(addressRepository.saveAndFlush(address));
+    }
+
+    /** {@code country} boşsa "Turkey"; {@code isDefault} gönderilmezse değişmez. */
+    public AddressDto updateAddress(Long addressId, Long userId, UpdateAddressDto dto) {
+        Address address = require(addressId, userId);
+        if (dto.getIsDefault() != null) {
+            if (dto.getIsDefault()) {
+                clearDefault(userId, addressId);
+            }
+            address.setIsDefault(dto.getIsDefault());
+        }
+        address.setTitle(dto.getTitle());
+        address.setFullAddress(dto.getFullAddress());
+        address.setCity(dto.getCity());
+        address.setDistrict(dto.getDistrict());
+        address.setPostalCode(dto.getPostalCode());
+        address.setCountry(countryOrDefault(dto.getCountry()));
+        address.setPhoneNumber(dto.getPhoneNumber());
+        address.setUpdatedAt(LocalDateTime.now());
+        return AddressDto.from(addressRepository.saveAndFlush(address));
+    }
+
+    /** Yumuşak silme; varsayılan silinirse kalan en yeni adres varsayılan olur. */
+    public void deleteAddress(Long addressId, Long userId) {
+        Address address = require(addressId, userId);
+        boolean wasDefault = Boolean.TRUE.equals(address.getIsDefault());
+        address.setIsActive(false);
+        address.setIsDefault(false);
+        address.setUpdatedAt(LocalDateTime.now());
+        addressRepository.saveAndFlush(address);
+        if (wasDefault) {
+            addressRepository.findByUserIdAndIsActiveTrueOrderByCreatedAtDescIdDesc(userId).stream()
+                    .findFirst()
+                    .ifPresent(next -> {
+                        next.setIsDefault(true);
+                        next.setUpdatedAt(LocalDateTime.now());
+                    });
         }
     }
 
-    public BaseResponseDto<AddressDto> getAddressById(Long addressId, Long userId) {
-        try {
-            Address address = addressRepository.findByIdAndUserIdAndIsActiveTrue(addressId, userId).orElse(null);
-            if (address == null) {
-                return BaseResponseDto.error("Address not found");
-            }
+    public AddressDto setDefaultAddress(Long addressId, Long userId) {
+        Address address = require(addressId, userId);
+        clearDefault(userId, addressId);
+        address.setIsDefault(true);
+        address.setUpdatedAt(LocalDateTime.now());
+        return AddressDto.from(addressRepository.saveAndFlush(address));
+    }
 
-            AddressDto addressDto = convertToAddressDto(address);
-            return BaseResponseDto.success("Address retrieved successfully", addressDto);
-        } catch (Exception ex) {
-            return BaseResponseDto.error("Error retrieving address: " + ex.getMessage());
+    private Address require(Long addressId, Long userId) {
+        return addressRepository.findByIdAndUserIdAndIsActiveTrue(addressId, userId)
+                .orElseThrow(() -> ApiException.notFound("ADDRESS_NOT_FOUND", "Address not found"));
+    }
+
+    private void clearDefault(Long userId, Long exceptId) {
+        LocalDateTime now = LocalDateTime.now();
+        for (Address other : addressRepository.findByUserIdAndIsDefaultTrueAndIsActiveTrue(userId)) {
+            if (!other.getId().equals(exceptId)) {
+                other.setIsDefault(false);
+                other.setUpdatedAt(now);
+            }
         }
     }
 
-    public BaseResponseDto<AddressDto> createAddress(Long userId, CreateAddressDto createAddressDto) {
-        try {
-            // If this is set as default, remove default from other addresses
-            if (createAddressDto.getIsDefault()) {
-                List<Address> existingDefaultAddresses = addressRepository
-                        .findByUserIdAndIsDefaultTrueAndIsActiveTrue(userId);
-                for (Address existingAddress : existingDefaultAddresses) {
-                    existingAddress.setIsDefault(false);
-                    existingAddress.setUpdatedAt(LocalDateTime.now());
-                }
-            }
-
-            Address address = new Address();
-            address.setUserId(userId);
-            address.setTitle(createAddressDto.getTitle());
-            address.setFullAddress(createAddressDto.getFullAddress());
-            address.setCity(createAddressDto.getCity());
-            address.setDistrict(createAddressDto.getDistrict());
-            address.setPostalCode(createAddressDto.getPostalCode());
-            address.setCountry(createAddressDto.getCountry());
-            address.setIsDefault(createAddressDto.getIsDefault());
-            address.setPhoneNumber(createAddressDto.getPhoneNumber());
-            address.setIsActive(true);
-            address.setCreatedAt(LocalDateTime.now());
-            address.setUpdatedAt(LocalDateTime.now());
-
-            Address savedAddress = addressRepository.save(address);
-            AddressDto addressDto = convertToAddressDto(savedAddress);
-
-            return BaseResponseDto.success("Address created successfully", addressDto);
-        } catch (Exception ex) {
-            return BaseResponseDto.error("Error creating address: " + ex.getMessage());
-        }
-    }
-
-    public BaseResponseDto<AddressDto> updateAddress(Long addressId, Long userId, UpdateAddressDto updateAddressDto) {
-        try {
-            Address address = addressRepository.findByIdAndUserIdAndIsActiveTrue(addressId, userId).orElse(null);
-            if (address == null) {
-                return BaseResponseDto.error("Address not found");
-            }
-
-            // If this is set as default, remove default from other addresses
-            if (updateAddressDto.getIsDefault() && !address.getIsDefault()) {
-                List<Address> existingDefaultAddresses = addressRepository
-                        .findByUserIdAndIsDefaultTrueAndIsActiveTrue(userId);
-                for (Address existingAddress : existingDefaultAddresses) {
-                    if (!existingAddress.getId().equals(addressId)) {
-                        existingAddress.setIsDefault(false);
-                        existingAddress.setUpdatedAt(LocalDateTime.now());
-                    }
-                }
-            }
-
-            address.setTitle(updateAddressDto.getTitle());
-            address.setFullAddress(updateAddressDto.getFullAddress());
-            address.setCity(updateAddressDto.getCity());
-            address.setDistrict(updateAddressDto.getDistrict());
-            address.setPostalCode(updateAddressDto.getPostalCode());
-            address.setCountry(updateAddressDto.getCountry());
-            address.setIsDefault(updateAddressDto.getIsDefault());
-            address.setPhoneNumber(updateAddressDto.getPhoneNumber());
-            address.setUpdatedAt(LocalDateTime.now());
-
-            Address savedAddress = addressRepository.save(address);
-            AddressDto addressDto = convertToAddressDto(savedAddress);
-
-            return BaseResponseDto.success("Address updated successfully", addressDto);
-        } catch (Exception ex) {
-            return BaseResponseDto.error("Error updating address: " + ex.getMessage());
-        }
-    }
-
-    public BaseResponseDto<String> deleteAddress(Long addressId, Long userId) {
-        try {
-            Address address = addressRepository.findByIdAndUserIdAndIsActiveTrue(addressId, userId).orElse(null);
-            if (address == null) {
-                return BaseResponseDto.error("Address not found");
-            }
-
-            address.setIsActive(false);
-            address.setUpdatedAt(LocalDateTime.now());
-            addressRepository.save(address);
-
-            return BaseResponseDto.success("Address deleted successfully", "Address deleted successfully");
-        } catch (Exception ex) {
-            return BaseResponseDto.error("Error deleting address: " + ex.getMessage());
-        }
-    }
-
-    public BaseResponseDto<AddressDto> setDefaultAddress(Long addressId, Long userId) {
-        try {
-            Address address = addressRepository.findByIdAndUserIdAndIsActiveTrue(addressId, userId).orElse(null);
-            if (address == null) {
-                return BaseResponseDto.error("Address not found");
-            }
-
-            // Remove default from other addresses
-            List<Address> existingDefaultAddresses = addressRepository
-                    .findByUserIdAndIsDefaultTrueAndIsActiveTrue(userId);
-            for (Address existingAddress : existingDefaultAddresses) {
-                if (!existingAddress.getId().equals(addressId)) {
-                    existingAddress.setIsDefault(false);
-                    existingAddress.setUpdatedAt(LocalDateTime.now());
-                }
-            }
-
-            address.setIsDefault(true);
-            address.setUpdatedAt(LocalDateTime.now());
-            Address savedAddress = addressRepository.save(address);
-            AddressDto addressDto = convertToAddressDto(savedAddress);
-
-            return BaseResponseDto.success("Default address set successfully", addressDto);
-        } catch (Exception ex) {
-            return BaseResponseDto.error("Error setting default address: " + ex.getMessage());
-        }
-    }
-
-    private AddressDto convertToAddressDto(Address address) {
-        return new AddressDto(
-                address.getId(),
-                address.getUserId(),
-                address.getTitle(),
-                address.getFullAddress(),
-                address.getCity(),
-                address.getDistrict(),
-                address.getPostalCode(),
-                address.getCountry(),
-                address.getIsDefault(),
-                address.getPhoneNumber(),
-                address.getCreatedAt(),
-                address.getUpdatedAt());
+    private static String countryOrDefault(String country) {
+        return StringUtils.hasText(country) ? country.trim() : DEFAULT_COUNTRY;
     }
 }

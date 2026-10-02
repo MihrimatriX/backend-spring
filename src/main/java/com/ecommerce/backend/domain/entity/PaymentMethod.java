@@ -24,7 +24,7 @@ public class PaymentMethod extends BaseEntity {
     @NotBlank(message = "Card number is required")
     @Size(max = 20, message = "Card number cannot exceed 20 characters")
     @Column(name = "card_number", nullable = false, length = 20)
-    private String cardNumber; // Masked: **** **** **** 1234
+    private String cardNumber; // Yalnızca maskeli: **** **** **** 1234 (tam numara ve CVV saklanmaz)
 
     @NotNull(message = "Expiry month is required")
     @Min(value = 1, message = "Expiry month must be between 1 and 12")
@@ -38,17 +38,13 @@ public class PaymentMethod extends BaseEntity {
     @Column(name = "expiry_year", nullable = false)
     private Integer expiryYear;
 
-    @Size(max = 10, message = "CVV cannot exceed 10 characters")
-    @Column(name = "cvv", length = 10)
-    private String cvv; // Encrypted
-
     @Size(max = 100, message = "Bank name cannot exceed 100 characters")
     @Column(name = "bank_name", length = 100)
     private String bankName;
 
     @Size(max = 50, message = "Account number cannot exceed 50 characters")
     @Column(name = "account_number", length = 50)
-    private String accountNumber; // Masked
+    private String accountNumber; // Yalnızca maskeli: ****1234
 
     @Size(max = 100, message = "Account holder name cannot exceed 100 characters")
     @Column(name = "account_holder_name", length = 100)
@@ -66,7 +62,7 @@ public class PaymentMethod extends BaseEntity {
     }
 
     public PaymentMethod(Long userId, String type, String cardHolderName, String cardNumber,
-            Integer expiryMonth, Integer expiryYear, String cvv, String bankName,
+            Integer expiryMonth, Integer expiryYear, String bankName,
             String accountNumber, String accountHolderName, Boolean isDefault) {
         this.userId = userId;
         this.type = type;
@@ -74,7 +70,6 @@ public class PaymentMethod extends BaseEntity {
         this.cardNumber = cardNumber;
         this.expiryMonth = expiryMonth;
         this.expiryYear = expiryYear;
-        this.cvv = cvv;
         this.bankName = bankName;
         this.accountNumber = accountNumber;
         this.accountHolderName = accountHolderName;
@@ -128,14 +123,6 @@ public class PaymentMethod extends BaseEntity {
 
     public void setExpiryYear(Integer expiryYear) {
         this.expiryYear = expiryYear;
-    }
-
-    public String getCvv() {
-        return cvv;
-    }
-
-    public void setCvv(String cvv) {
-        this.cvv = cvv;
     }
 
     public String getBankName() {

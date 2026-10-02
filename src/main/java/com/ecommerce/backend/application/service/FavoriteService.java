@@ -1,135 +1,92 @@
 package com.ecommerce.backend.application.service;
 
 import com.ecommerce.backend.application.dto.AddToFavoritesDto;
-import com.ecommerce.backend.application.dto.BaseResponseDto;
 import com.ecommerce.backend.application.dto.FavoriteDto;
+import com.ecommerce.backend.application.exception.ApiException;
 import com.ecommerce.backend.domain.entity.Favorite;
 import com.ecommerce.backend.domain.entity.Product;
 import com.ecommerce.backend.infrastructure.repository.FavoriteRepository;
 import com.ecommerce.backend.infrastructure.repository.ProductRepository;
-import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
+/**
+ * Favoriler — docs/API_CONTRACT.md §4.7. Kaldırılan favori satırı silinir; böylece
+ * PostgreSQL'deki aktif satırlara özel tekil indeks yeniden eklemeyi engellemez.
+ */
 @Service
-@Slf4j
+@RequiredArgsConstructor
+@Transactional
 public class FavoriteService {
+
+    private static final String ALREADY_FAVORITE = "Product already in favorites";
 
     private final FavoriteRepository favoriteRepository;
     private final ProductRepository productRepository;
 
-    public FavoriteService(FavoriteRepository favoriteRepository, ProductRepository productRepository) {
-        this.favoriteRepository = favoriteRepository;
-        this.productRepository = productRepository;
+    /** En yeni önce. */
+    @Transactional(readOnly = true)
+    public List<FavoriteDto> getUserFavorites(Long userId) {
+        return favoriteRepository.findActiveByUserIdWithProduct(userId).stream()
+                .map(f -> toDto(f, f.getProduct()))
+                .toList();
+    }
+
+    public FavoriteDto addToFavorites(Long userId, AddToFavoritesDto request) {
+        Product product = Optional.ofNullable(request.getProductId())
+                .flatMap(productRepository::findById)
+                .filter(p -> Boolean.TRUE.equals(p.getIsActive()))
+                .orElseThrow(() -> ApiException.badRequest("PRODUCT_NOT_FOUND", "Product not found or inactive"));
+        if (favoriteRepository.existsByUserIdAndProductIdAndIsActiveTrue(userId, product.getId())) {
+            throw ApiException.badRequest("ALREADY_FAVORITE", ALREADY_FAVORITE);
+        }
+
+        Favorite favorite = new Favorite(userId, product.getId());
+        favorite.setIsActive(true);
+        try {
+            favorite = favoriteRepository.saveAndFlush(favorite);
+        } catch (DataIntegrityViolationException ex) {
+            // Aynı anda gelen ikinci istek tekil indekse takıldı.
+            throw ApiException.badRequest("ALREADY_FAVORITE", ALREADY_FAVORITE);
+        }
+        return toDto(favorite, product);
+    }
+
+    public void removeFromFavorites(Long userId, Long productId) {
+        List<Favorite> rows = favoriteRepository.findByUserIdAndProductIdAndIsActiveTrue(userId, productId);
+        if (rows.isEmpty()) {
+            throw ApiException.badRequest("NOT_FAVORITE", "Product not found in favorites");
+        }
+        favoriteRepository.deleteAll(rows);
     }
 
     @Transactional(readOnly = true)
-    public BaseResponseDto<List<FavoriteDto>> getUserFavorites(Long userId) {
-        try {
-            List<Favorite> favorites = favoriteRepository.findByUserIdOrderByCreatedAtDesc(userId);
-            List<FavoriteDto> favoriteDtos = favorites.stream()
-                    .map(this::convertToDto)
-                    .collect(Collectors.toList());
-
-            return BaseResponseDto.success("Favorites retrieved successfully", favoriteDtos);
-        } catch (Exception e) {
-            log.error("Error retrieving favorites for user {}: {}", userId, e.getMessage(), e);
-            return BaseResponseDto.error("Error retrieving favorites: " + e.getMessage());
-        }
+    public boolean isProductInFavorites(Long userId, Long productId) {
+        return favoriteRepository.existsByUserIdAndProductIdAndIsActiveTrue(userId, productId);
     }
 
-    @Transactional
-    public BaseResponseDto<FavoriteDto> addToFavorites(Long userId, AddToFavoritesDto addToFavoritesDto) {
-        try {
-            // Check if product exists and is active
-            Product product = productRepository.findById(addToFavoritesDto.getProductId())
-                    .filter(Product::getIsActive)
-                    .orElse(null);
-
-            if (product == null) {
-                return BaseResponseDto.error("Product not found or inactive");
-            }
-
-            // Check if already in favorites
-            Favorite existingFavorite = favoriteRepository
-                    .findByUserIdAndProductId(userId, addToFavoritesDto.getProductId()).orElse(null);
-            if (existingFavorite != null) {
-                return BaseResponseDto.error("Product already in favorites");
-            }
-
-            Favorite favorite = new Favorite();
-            favorite.setUserId(userId);
-            favorite.setProductId(addToFavoritesDto.getProductId());
-            favorite.setCreatedAt(LocalDateTime.now());
-
-            Favorite savedFavorite = favoriteRepository.save(favorite);
-            return BaseResponseDto.success("Product added to favorites", convertToDto(savedFavorite));
-        } catch (Exception e) {
-            log.error("Error adding product {} to favorites for user {}: {}", addToFavoritesDto.getProductId(), userId,
-                    e.getMessage(), e);
-            return BaseResponseDto.error("Error adding to favorites: " + e.getMessage());
-        }
+    public void clearFavorites(Long userId) {
+        favoriteRepository.deleteAllByUserId(userId);
     }
 
-    @Transactional
-    public BaseResponseDto<String> removeFromFavorites(Long userId, Long productId) {
-        try {
-            Favorite favorite = favoriteRepository.findByUserIdAndProductId(userId, productId).orElse(null);
-            if (favorite == null) {
-                return BaseResponseDto.error("Product not found in favorites");
-            }
-
-            favoriteRepository.delete(favorite);
-            return BaseResponseDto.success("Product removed from favorites", "Product removed from favorites");
-        } catch (Exception e) {
-            log.error("Error removing product {} from favorites for user {}: {}", productId, userId, e.getMessage(), e);
-            return BaseResponseDto.error("Error removing from favorites: " + e.getMessage());
-        }
-    }
-
-    @Transactional(readOnly = true)
-    public BaseResponseDto<Boolean> isProductInFavorites(Long userId, Long productId) {
-        try {
-            boolean isInFavorites = favoriteRepository.findByUserIdAndProductId(userId, productId).isPresent();
-            return BaseResponseDto.success("Favorite status retrieved", isInFavorites);
-        } catch (Exception e) {
-            log.error("Error checking favorite status for product {} and user {}: {}", productId, userId,
-                    e.getMessage(), e);
-            return BaseResponseDto.error("Error checking favorite status: " + e.getMessage());
-        }
-    }
-
-    @Transactional
-    public BaseResponseDto<String> clearFavorites(Long userId) {
-        try {
-            favoriteRepository.deleteByUserId(userId);
-            return BaseResponseDto.success("Favorites cleared successfully", "Favorites cleared successfully");
-        } catch (Exception e) {
-            log.error("Error clearing favorites for user {}: {}", userId, e.getMessage(), e);
-            return BaseResponseDto.error("Error clearing favorites: " + e.getMessage());
-        }
-    }
-
-    private FavoriteDto convertToDto(Favorite favorite) {
-        FavoriteDto dto = new FavoriteDto();
-        dto.setId(favorite.getId());
-        dto.setUserId(favorite.getUserId());
-        dto.setProductId(favorite.getProductId());
-        dto.setProductName(favorite.getProduct() != null ? favorite.getProduct().getProductName() : "");
-        dto.setProductImageUrl(favorite.getProduct() != null ? favorite.getProduct().getImageUrl() : null);
-        dto.setProductPrice(favorite.getProduct() != null ? favorite.getProduct().getUnitPrice() : null);
-        dto.setProductDiscount(favorite.getProduct() != null ? BigDecimal.valueOf(favorite.getProduct().getDiscount())
-                : BigDecimal.ZERO);
-        dto.setProductCategory(favorite.getProduct() != null && favorite.getProduct().getCategory() != null
-                ? favorite.getProduct().getCategory().getCategoryName()
-                : null);
-        dto.setProductInStock(favorite.getProduct() != null ? favorite.getProduct().getUnitInStock() > 0 : false);
-        dto.setCreatedAt(favorite.getCreatedAt());
-        return dto;
+    private static FavoriteDto toDto(Favorite favorite, Product product) {
+        String category = product.getCategory() != null ? product.getCategory().getCategoryName() : null;
+        Integer stock = product.getUnitInStock();
+        return new FavoriteDto(
+                favorite.getId(),
+                favorite.getUserId(),
+                product.getId(),
+                product.getProductName(),
+                product.getImageUrl(),
+                product.getUnitPrice(),
+                product.getDiscount(),
+                category,
+                stock != null && stock > 0,
+                favorite.getCreatedAt());
     }
 }
