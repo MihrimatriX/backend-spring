@@ -12,7 +12,7 @@ import java.util.List;
 public class Category extends BaseEntity {
 
     @NotBlank(message = "Category name is required")
-    @Size(min = 2, max = 100, message = "Category name must be between 2 and 100 characters")
+    @Size(max = 100, message = "Category name cannot exceed 100 characters")
     @Column(name = "category_name", nullable = false, unique = true)
     private String categoryName;
 
