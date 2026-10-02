@@ -15,6 +15,11 @@ public class LoginRequestDto {
     @Email(message = "Invalid email format")
     private String email;
 
+    /** E-posta doğrulamadan önce kırpılır (küçük harfe çevirme serviste). */
+    public void setEmail(String email) {
+        this.email = email == null ? null : email.trim();
+    }
+
     @NotBlank(message = "Password is required")
     private String password;
 }

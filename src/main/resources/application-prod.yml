@@ -12,6 +12,8 @@ app:
     redis: true
   messaging:
     enabled: ${MESSAGING_ENABLED:true}
+  rate-limit:
+    permit-per-minute: ${RATE_LIMIT:1000}
 
 spring:
   datasource:
@@ -97,16 +99,6 @@ prod:
     enabled: true
   debug:
     enabled: false
-
-# Security Configuration
-security:
-  rate-limit:
-    requests-per-minute: ${RATE_LIMIT:1000}
-  cors:
-    allowed-origins: ${ALLOWED_ORIGINS:https://yourdomain.com}
-    allowed-methods: GET,POST,PUT,DELETE,OPTIONS
-    allowed-headers: "*"
-    allow-credentials: true
 
 # Monitoring Configuration
 management:

@@ -1,29 +1,30 @@
 package com.ecommerce.backend.application.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
+import java.util.List;
 import java.util.Map;
 
+/**
+ * Ortak cevap zarfı (docs/API_CONTRACT.md §1.1). {@code data}, {@code error}, {@code errorCode},
+ * {@code errors} ve {@code traceId} null ise yazılmaz.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({ "success", "message", "data", "error", "errorCode", "errors", "traceId" })
 public class BaseResponseDto<T> {
     private boolean success;
     private String message;
     private T data;
+    /** Yalnızca geliştirme ortamında teknik ayrıntı. */
     private String error;
-    /**
-     * Makine tarafından işlenebilir hata kodu (örn. STOCK_INSUFFICIENT,
-     * ADDRESS_NOT_OWNED).
-     */
-    private String code;
-    /** Bean validation veya alan bazlı hatalar. */
-    private Map<String, String> fieldErrors;
-    /**
-     * İstek korelasyon kimliği (loglarda {@code correlationId} ile aynı). Destek ve
-     * teşhis için döndürülür.
-     */
+    /** Makine tarafından işlenebilir hata kodu (örn. ORDER_NOT_FOUND). */
+    private String errorCode;
+    /** Doğrulama hataları: alan adı (camelCase) → mesajlar. */
+    private Map<String, List<String>> errors;
+    /** İstek korelasyon kimliği ({@code X-Correlation-Id}). */
     private String traceId;
 
-    // Constructors
     public BaseResponseDto() {
     }
 
@@ -33,18 +34,6 @@ public class BaseResponseDto<T> {
         this.data = data;
     }
 
-    public BaseResponseDto(boolean success, String message) {
-        this.success = success;
-        this.message = message;
-    }
-
-    public BaseResponseDto(boolean success, String message, String error) {
-        this.success = success;
-        this.message = message;
-        this.error = error;
-    }
-
-    // Static factory methods
     public static <T> BaseResponseDto<T> success(T data) {
         return new BaseResponseDto<>(true, "Operation successful", data);
     }
@@ -53,29 +42,28 @@ public class BaseResponseDto<T> {
         return new BaseResponseDto<>(true, message, data);
     }
 
-    public static <T> BaseResponseDto<T> success(String message) {
-        return new BaseResponseDto<>(true, message);
-    }
-
-    public static <T> BaseResponseDto<T> error(String message) {
-        return new BaseResponseDto<>(false, message);
-    }
-
-    /**
-     * İş kuralı / istemci tarafından işlenebilir hata (HTTP gövdesinde {@code code}
-     * ile).
-     */
-    public static <T> BaseResponseDto<T> codedError(String code, String message) {
-        BaseResponseDto<T> r = new BaseResponseDto<>(false, message);
-        r.setCode(code);
+    /** Hata cevabı; {@code errorCode} her zaman doldurulmalıdır. */
+    public static <T> BaseResponseDto<T> fail(String errorCode, String message) {
+        BaseResponseDto<T> r = new BaseResponseDto<>(false, message, null);
+        r.setErrorCode(errorCode);
         return r;
     }
 
-    public static <T> BaseResponseDto<T> error(String message, String error) {
-        return new BaseResponseDto<>(false, message, error);
+    /**
+     * @deprecated Kodsuz hata; yeni kodda {@link #fail(String, String)} veya
+     *             {@code ApiException} kullanın.
+     */
+    @Deprecated
+    public static <T> BaseResponseDto<T> error(String message) {
+        return fail("BAD_REQUEST", message);
     }
 
-    // Getters and Setters
+    /** @deprecated {@link #fail(String, String)} kullanın. */
+    @Deprecated
+    public static <T> BaseResponseDto<T> codedError(String errorCode, String message) {
+        return fail(errorCode, message);
+    }
+
     public boolean isSuccess() {
         return success;
     }
@@ -108,20 +96,20 @@ public class BaseResponseDto<T> {
         this.error = error;
     }
 
-    public String getCode() {
-        return code;
+    public String getErrorCode() {
+        return errorCode;
     }
 
-    public void setCode(String code) {
-        this.code = code;
+    public void setErrorCode(String errorCode) {
+        this.errorCode = errorCode;
     }
 
-    public Map<String, String> getFieldErrors() {
-        return fieldErrors;
+    public Map<String, List<String>> getErrors() {
+        return errors;
     }
 
-    public void setFieldErrors(Map<String, String> fieldErrors) {
-        this.fieldErrors = fieldErrors;
+    public void setErrors(Map<String, List<String>> errors) {
+        this.errors = errors;
     }
 
     public String getTraceId() {

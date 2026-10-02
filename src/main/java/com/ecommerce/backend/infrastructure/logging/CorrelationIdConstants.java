@@ -5,7 +5,7 @@ package com.ecommerce.backend.infrastructure.logging;
  */
 public final class CorrelationIdConstants {
 
-    public static final String HEADER = "X-Correlation-ID";
+    public static final String HEADER = "X-Correlation-Id";
     /** SLF4J MDC anahtarı — log pattern'de {@code %X{correlationId}} */
     public static final String MDC_KEY = "correlationId";
 

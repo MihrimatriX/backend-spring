@@ -7,7 +7,7 @@ import com.ecommerce.backend.application.dto.OrderDto;
 import com.ecommerce.backend.application.dto.ReturnRequestDto;
 import com.ecommerce.backend.application.dto.UpdateOrderStatusDto;
 import com.ecommerce.backend.application.service.OrderService;
-import com.ecommerce.backend.infrastructure.security.JwtUtil;
+import com.ecommerce.backend.infrastructure.security.CurrentUserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -22,28 +22,28 @@ import java.util.List;
 public class OrderController {
 
     private final OrderService orderService;
-    private final JwtUtil jwtUtil;
+    private final CurrentUserService currentUserService;
 
-    public OrderController(OrderService orderService, JwtUtil jwtUtil) {
+    public OrderController(OrderService orderService, CurrentUserService currentUserService) {
         this.orderService = orderService;
-        this.jwtUtil = jwtUtil;
+        this.currentUserService = currentUserService;
     }
 
     @GetMapping
     public ResponseEntity<BaseResponseDto<List<OrderDto>>> getUserOrders(HttpServletRequest request) {
-        Long userId = jwtUtil.extractUserId(request);
+        Long userId = currentUserService.requireUserId();
         BaseResponseDto<List<OrderDto>> response = orderService.getUserOrders(userId);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<BaseResponseDto<OrderDto>> getOrderById(@PathVariable Long id, HttpServletRequest request) {
-        Long userId = jwtUtil.extractUserId(request);
+        Long userId = currentUserService.requireUserId();
         BaseResponseDto<OrderDto> response = orderService.getOrderById(id, userId);
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
         }
-        if ("ORDER_NOT_FOUND".equals(response.getCode())) {
+        if ("ORDER_NOT_FOUND".equals(response.getErrorCode())) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
@@ -54,7 +54,7 @@ public class OrderController {
             @Valid @RequestBody CreateOrderDto createOrderDto,
             @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
             HttpServletRequest request) {
-        Long userId = jwtUtil.extractUserId(request);
+        Long userId = currentUserService.requireUserId();
         if (idempotencyKey != null) {
             String trimmed = idempotencyKey.trim();
             if (trimmed.length() > 128) {
@@ -80,7 +80,7 @@ public class OrderController {
     }
 
     private static HttpStatus orderCreateErrorStatus(BaseResponseDto<?> r) {
-        String c = r.getCode();
+        String c = r.getErrorCode();
         if ("STOCK_INSUFFICIENT".equals(c)) {
             return HttpStatus.CONFLICT;
         }
@@ -103,15 +103,15 @@ public class OrderController {
             @PathVariable Long id,
             @RequestBody(required = false) @Valid CancelOrderRequest body,
             HttpServletRequest request) {
-        Long userId = jwtUtil.extractUserId(request);
+        Long userId = currentUserService.requireUserId();
         String reason = body != null ? body.getReason() : null;
         BaseResponseDto<String> response = orderService.cancelOrder(id, userId, reason);
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
         }
-        HttpStatus st = "ORDER_NOT_FOUND".equals(response.getCode()) ? HttpStatus.NOT_FOUND
-                : "ORDER_NOT_CANCELLABLE".equals(response.getCode())
-                        || "ORDER_ALREADY_CANCELLED".equals(response.getCode())
+        HttpStatus st = "ORDER_NOT_FOUND".equals(response.getErrorCode()) ? HttpStatus.NOT_FOUND
+                : "ORDER_NOT_CANCELLABLE".equals(response.getErrorCode())
+                        || "ORDER_ALREADY_CANCELLED".equals(response.getErrorCode())
                                 ? HttpStatus.CONFLICT
                                 : HttpStatus.BAD_REQUEST;
         return ResponseEntity.status(st).body(response);
@@ -122,27 +122,27 @@ public class OrderController {
             @PathVariable Long id,
             @Valid @RequestBody ReturnRequestDto body,
             HttpServletRequest request) {
-        Long userId = jwtUtil.extractUserId(request);
+        Long userId = currentUserService.requireUserId();
         BaseResponseDto<OrderDto> response = orderService.requestReturn(id, userId, body.getReason());
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
         }
-        HttpStatus st = "ORDER_NOT_FOUND".equals(response.getCode()) ? HttpStatus.NOT_FOUND
-                : "RETURN_NOT_ALLOWED".equals(response.getCode()) ? HttpStatus.CONFLICT : HttpStatus.BAD_REQUEST;
+        HttpStatus st = "ORDER_NOT_FOUND".equals(response.getErrorCode()) ? HttpStatus.NOT_FOUND
+                : "RETURN_NOT_ALLOWED".equals(response.getErrorCode()) ? HttpStatus.CONFLICT : HttpStatus.BAD_REQUEST;
         return ResponseEntity.status(st).body(response);
     }
 
     @PostMapping("/{id}/demo/advance-fulfillment")
     public ResponseEntity<BaseResponseDto<OrderDto>> demoAdvanceFulfillment(@PathVariable Long id,
             HttpServletRequest request) {
-        Long userId = jwtUtil.extractUserId(request);
+        Long userId = currentUserService.requireUserId();
         BaseResponseDto<OrderDto> response = orderService.demoAdvanceFulfillment(id, userId);
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
         }
-        HttpStatus st = "DEMO_FULFILLMENT_DISABLED".equals(response.getCode()) ? HttpStatus.NOT_FOUND
-                : "ORDER_NOT_FOUND".equals(response.getCode()) ? HttpStatus.NOT_FOUND
-                        : "DEMO_ADVANCE_INVALID_STATE".equals(response.getCode()) ? HttpStatus.CONFLICT
+        HttpStatus st = "DEMO_FULFILLMENT_DISABLED".equals(response.getErrorCode()) ? HttpStatus.NOT_FOUND
+                : "ORDER_NOT_FOUND".equals(response.getErrorCode()) ? HttpStatus.NOT_FOUND
+                        : "DEMO_ADVANCE_INVALID_STATE".equals(response.getErrorCode()) ? HttpStatus.CONFLICT
                                 : HttpStatus.BAD_REQUEST;
         return ResponseEntity.status(st).body(response);
     }
