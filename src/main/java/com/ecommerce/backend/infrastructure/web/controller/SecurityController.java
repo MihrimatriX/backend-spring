@@ -1,154 +1,110 @@
 package com.ecommerce.backend.infrastructure.web.controller;
 
-import com.ecommerce.backend.application.dto.*;
+import com.ecommerce.backend.application.dto.BaseResponseDto;
+import com.ecommerce.backend.application.dto.ChangePasswordDto;
+import com.ecommerce.backend.application.dto.DisableTwoFactorDto;
+import com.ecommerce.backend.application.dto.EnableTwoFactorDto;
+import com.ecommerce.backend.application.dto.LoginHistoryDto;
+import com.ecommerce.backend.application.dto.SecurityDto;
+import com.ecommerce.backend.application.dto.SecuritySettingsDto;
+import com.ecommerce.backend.application.dto.UpdateEmailDto;
 import com.ecommerce.backend.application.service.SecurityService;
+import com.ecommerce.backend.infrastructure.security.AuthenticatedUser;
+import com.ecommerce.backend.infrastructure.security.CurrentUserService;
+import com.ecommerce.backend.infrastructure.web.support.ApiResponses;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * docs/API_CONTRACT.md §4.13 — oturum sahibinin hesap güvenliği.
+ */
 @RestController
 @RequestMapping("/api/security")
-@Tag(name = "Security Management", description = "APIs for managing user security settings")
+@RequiredArgsConstructor
+@Tag(name = "Security", description = "Şifre, e-posta, giriş geçmişi, oturum iptali")
 public class SecurityController {
 
-    @Autowired
-    private SecurityService securityService;
-
-    @Autowired
-    private com.ecommerce.backend.infrastructure.security.CurrentUserService currentUserService;
+    private final SecurityService securityService;
+    private final CurrentUserService currentUserService;
 
     @GetMapping("/info")
-    @Operation(summary = "Get security information", description = "Retrieve security information for the current user")
+    @Operation(summary = "Güvenlik özeti (son başarılı giriş, son 5 giriş)")
     public ResponseEntity<BaseResponseDto<SecurityDto>> getSecurityInfo() {
-        try {
-            Long currentUserId = getCurrentUserId();
-            BaseResponseDto<SecurityDto> result = securityService.getSecurityInfo(currentUserId);
-
-            if (result.isSuccess()) {
-                return ResponseEntity.ok(result);
-            }
-            return ResponseEntity.badRequest().body(result);
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(BaseResponseDto.error("Error retrieving security information: " + ex.getMessage()));
-        }
-    }
-
-    @PostMapping("/change-password")
-    @Operation(summary = "Change password", description = "Change user password")
-    public ResponseEntity<BaseResponseDto<String>> changePassword(
-            @Valid @RequestBody ChangePasswordDto changePasswordDto) {
-        try {
-            Long currentUserId = getCurrentUserId();
-            BaseResponseDto<String> result = securityService.changePassword(currentUserId, changePasswordDto);
-
-            if (result.isSuccess()) {
-                return ResponseEntity.ok(result);
-            }
-            return ResponseEntity.badRequest().body(result);
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(BaseResponseDto.error("Error changing password: " + ex.getMessage()));
-        }
-    }
-
-    @PostMapping("/update-email")
-    @Operation(summary = "Update email", description = "Update user email address")
-    public ResponseEntity<BaseResponseDto<String>> updateEmail(@Valid @RequestBody UpdateEmailDto updateEmailDto) {
-        try {
-            Long currentUserId = getCurrentUserId();
-            BaseResponseDto<String> result = securityService.updateEmail(currentUserId, updateEmailDto);
-
-            if (result.isSuccess()) {
-                return ResponseEntity.ok(result);
-            }
-            return ResponseEntity.badRequest().body(result);
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(BaseResponseDto.error("Error updating email: " + ex.getMessage()));
-        }
+        return ApiResponses.ok("Security information retrieved successfully",
+                securityService.getSecurityInfo(currentUserService.requireUserId()));
     }
 
     @GetMapping("/login-history")
-    @Operation(summary = "Get login history", description = "Retrieve login history for the current user")
+    @Operation(summary = "Giriş geçmişi (en yeni önce)")
     public ResponseEntity<BaseResponseDto<List<LoginHistoryDto>>> getLoginHistory(
-            @RequestParam(defaultValue = "1") int pageNumber,
-            @RequestParam(defaultValue = "10") int pageSize) {
-        try {
-            Long currentUserId = getCurrentUserId();
-            BaseResponseDto<List<LoginHistoryDto>> result = securityService.getLoginHistory(currentUserId, pageNumber,
-                    pageSize);
-
-            if (result.isSuccess()) {
-                return ResponseEntity.ok(result);
-            }
-            return ResponseEntity.badRequest().body(result);
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(BaseResponseDto.error("Error retrieving login history: " + ex.getMessage()));
-        }
+            @RequestParam(required = false) Integer pageNumber, @RequestParam(required = false) Integer pageSize) {
+        return ApiResponses.ok("Login history retrieved successfully", securityService.loginHistory(
+                currentUserService.requireUserId(), ApiResponses.page(pageNumber), ApiResponses.size(pageSize, 10)));
     }
 
     @GetMapping("/settings")
-    @Operation(summary = "Get security settings", description = "Retrieve security settings for the current user")
+    @Operation(summary = "Güvenlik ayarları")
     public ResponseEntity<BaseResponseDto<SecuritySettingsDto>> getSecuritySettings() {
-        try {
-            Long currentUserId = getCurrentUserId();
-            BaseResponseDto<SecuritySettingsDto> result = securityService.getSecuritySettings(currentUserId);
-
-            if (result.isSuccess()) {
-                return ResponseEntity.ok(result);
-            }
-            return ResponseEntity.badRequest().body(result);
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(BaseResponseDto.error("Error retrieving security settings: " + ex.getMessage()));
-        }
+        return ApiResponses.ok("Security settings retrieved successfully",
+                securityService.getSecuritySettings(currentUserService.requireUserId()));
     }
 
     @PutMapping("/settings")
-    @Operation(summary = "Update security settings", description = "Update security settings for the current user")
+    @Operation(summary = "Güvenlik ayarlarını kaydet")
     public ResponseEntity<BaseResponseDto<SecuritySettingsDto>> updateSecuritySettings(
-            @Valid @RequestBody SecuritySettingsDto securitySettingsDto) {
-        try {
-            Long currentUserId = getCurrentUserId();
-            BaseResponseDto<SecuritySettingsDto> result = securityService.updateSecuritySettings(currentUserId,
-                    securitySettingsDto);
+            @Valid @RequestBody SecuritySettingsDto request) {
+        return ApiResponses.ok("Security settings updated successfully",
+                securityService.updateSecuritySettings(currentUserService.requireUserId(), request));
+    }
 
-            if (result.isSuccess()) {
-                return ResponseEntity.ok(result);
-            }
-            return ResponseEntity.badRequest().body(result);
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(BaseResponseDto.error("Error updating security settings: " + ex.getMessage()));
-        }
+    @PostMapping("/change-password")
+    @Operation(summary = "Şifre değiştir; mevcut şifre hatalıysa 400 INVALID_PASSWORD")
+    public ResponseEntity<BaseResponseDto<String>> changePassword(@Valid @RequestBody ChangePasswordDto request) {
+        securityService.changePassword(currentUserService.requireUserId(), request);
+        return ApiResponses.ok("Password changed successfully", "Password changed successfully");
+    }
+
+    @PostMapping("/update-email")
+    @Operation(summary = "E-posta değiştir; kullanımdaysa 400 EMAIL_TAKEN")
+    public ResponseEntity<BaseResponseDto<String>> updateEmail(@Valid @RequestBody UpdateEmailDto request) {
+        securityService.updateEmail(currentUserService.requireUserId(), request);
+        return ApiResponses.ok("Email updated successfully. Please verify your new email address.",
+                "Email updated successfully");
     }
 
     @PostMapping("/logout-all-devices")
-    @Operation(summary = "Logout all devices", description = "Logout user from all devices")
+    @Operation(summary = "Çağıran token hariç tüm oturumları kapat")
     public ResponseEntity<BaseResponseDto<String>> logoutAllDevices() {
-        try {
-            Long currentUserId = getCurrentUserId();
-            BaseResponseDto<String> result = securityService.logoutAllDevices(currentUserId);
-
-            if (result.isSuccess()) {
-                return ResponseEntity.ok(result);
-            }
-            return ResponseEntity.badRequest().body(result);
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(BaseResponseDto.error("Error logging out all devices: " + ex.getMessage()));
-        }
+        AuthenticatedUser caller = currentUserService.require();
+        securityService.logoutAllDevices(caller.id(), caller.jti());
+        return ApiResponses.ok("All devices logged out successfully", "All devices logged out successfully");
     }
 
-    private Long getCurrentUserId() {
-        return currentUserService.requireUserId();
+    @PostMapping("/enable-2fa")
+    @Operation(summary = "Taslak: şifreyi doğrular (2FA henüz uygulanmadı)")
+    public ResponseEntity<BaseResponseDto<String>> enableTwoFactor(@Valid @RequestBody EnableTwoFactorDto request) {
+        securityService.verifyPasswordForTwoFactor(currentUserService.requireUserId(), request.getPassword());
+        return ApiResponses.ok("Two-factor authentication enabled successfully",
+                "Two-factor authentication enabled successfully");
+    }
+
+    @PostMapping("/disable-2fa")
+    @Operation(summary = "Taslak: şifreyi doğrular (2FA henüz uygulanmadı)")
+    public ResponseEntity<BaseResponseDto<String>> disableTwoFactor(@Valid @RequestBody DisableTwoFactorDto request) {
+        securityService.verifyPasswordForTwoFactor(currentUserService.requireUserId(), request.getPassword());
+        return ApiResponses.ok("Two-factor authentication disabled successfully",
+                "Two-factor authentication disabled successfully");
     }
 }

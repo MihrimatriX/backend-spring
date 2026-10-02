@@ -1,25 +1,25 @@
 package com.ecommerce.backend.application.dto;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+import java.time.LocalDateTime;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class UserSettingsDto {
-    private Long id;
-    private Long userId;
-    private String language = "tr";
-    private String currency = "TRY";
-    private String timezone = "Europe/Istanbul";
-    private boolean emailNotifications = true;
-    private boolean smsNotifications = false;
-    private boolean pushNotifications = true;
-    private boolean marketingEmails = false;
-    private String theme = "light";
-    private int itemsPerPage = 12;
-    private boolean twoFactorEnabled = false;
-    private String dateFormat = "dd/MM/yyyy";
-    private String timeFormat = "24h";
+/** docs/API_CONTRACT.md §3 — UserSettings */
+public record UserSettingsDto(
+        Long userId,
+        String language,
+        String timezone,
+        String currency,
+        Boolean emailNotifications,
+        Boolean smsNotifications,
+        Boolean pushNotifications,
+        Boolean marketingEmails,
+        Boolean orderUpdates,
+        Boolean priceAlerts,
+        Boolean stockNotifications,
+        String theme,
+        Integer itemsPerPage,
+        Boolean autoSaveCart,
+        Boolean showProductRecommendations,
+        Boolean enableLocationServices,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt) {
 }
