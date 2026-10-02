@@ -1,48 +1,44 @@
 package com.ecommerce.backend.infrastructure.web.controller;
 
+import com.ecommerce.backend.application.service.MetricsService;
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Zarfsız metrik uçları — docs/API_CONTRACT.md §4.16. Prometheus metni Micrometer
+ * {@link PrometheusMeterRegistry}'den üretilir (testlerde kayıt defteri yoksa 503).
+ */
 @RestController
 @RequestMapping("/api/metrics")
+@RequiredArgsConstructor
 public class MetricsController {
 
-    @GetMapping
-    public ResponseEntity<Map<String, Object>> metrics() {
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "OK");
-        response.put("service", "ecommerce-backend-spring");
-        response.put("timestamp", System.currentTimeMillis());
+    private static final MediaType PROMETHEUS_TEXT = MediaType.parseMediaType("text/plain;version=0.0.4;charset=utf-8");
 
-        // Basic metrics
-        Map<String, Object> metrics = new HashMap<>();
-        metrics.put("uptime", System.currentTimeMillis());
-        metrics.put("memory", Runtime.getRuntime().totalMemory());
-        metrics.put("freeMemory", Runtime.getRuntime().freeMemory());
-        metrics.put("maxMemory", Runtime.getRuntime().maxMemory());
+    private final ObjectProvider<PrometheusMeterRegistry> prometheusRegistry;
+    private final MetricsService metricsService;
 
-        response.put("metrics", metrics);
-        return ResponseEntity.ok(response);
+    @GetMapping({ "", "/prometheus" })
+    public ResponseEntity<String> prometheus() {
+        PrometheusMeterRegistry registry = prometheusRegistry.getIfAvailable();
+        if (registry == null) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).contentType(MediaType.TEXT_PLAIN)
+                    .body("Prometheus registry is not available\n");
+        }
+        return ResponseEntity.ok().contentType(PROMETHEUS_TEXT).body(registry.scrape());
     }
 
-    @GetMapping("/prometheus")
-    public ResponseEntity<String> prometheus() {
-        // Basic Prometheus metrics format
-        StringBuilder metrics = new StringBuilder();
-        metrics.append("# HELP jvm_memory_used_bytes Used memory in bytes\n");
-        metrics.append("# TYPE jvm_memory_used_bytes gauge\n");
-        metrics.append("jvm_memory_used_bytes ")
-                .append(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()).append("\n");
-
-        metrics.append("# HELP jvm_memory_max_bytes Max memory in bytes\n");
-        metrics.append("# TYPE jvm_memory_max_bytes gauge\n");
-        metrics.append("jvm_memory_max_bytes ").append(Runtime.getRuntime().maxMemory()).append("\n");
-
-        return ResponseEntity.ok(metrics.toString());
+    @GetMapping("/custom")
+    public Map<String, Object> custom() {
+        return metricsService.customMetrics();
     }
 }

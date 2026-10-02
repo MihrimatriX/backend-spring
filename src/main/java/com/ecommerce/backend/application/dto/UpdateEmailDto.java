@@ -2,8 +2,16 @@ package com.ecommerce.backend.application.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+/** {@code POST /api/security/update-email}; e-posta serviste küçük harfe çevrilir. */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class UpdateEmailDto {
+
     @NotBlank(message = "New email is required")
     @Email(message = "Invalid email format")
     private String newEmail;
@@ -11,18 +19,8 @@ public class UpdateEmailDto {
     @NotBlank(message = "Current password is required")
     private String currentPassword;
 
-    // Constructors
-    public UpdateEmailDto() {}
-
-    public UpdateEmailDto(String newEmail, String currentPassword) {
-        this.newEmail = newEmail;
-        this.currentPassword = currentPassword;
+    /** Doğrulamadan önce kırpılır. */
+    public void setNewEmail(String newEmail) {
+        this.newEmail = newEmail == null ? null : newEmail.trim();
     }
-
-    // Getters and Setters
-    public String getNewEmail() { return newEmail; }
-    public void setNewEmail(String newEmail) { this.newEmail = newEmail; }
-
-    public String getCurrentPassword() { return currentPassword; }
-    public void setCurrentPassword(String currentPassword) { this.currentPassword = currentPassword; }
 }

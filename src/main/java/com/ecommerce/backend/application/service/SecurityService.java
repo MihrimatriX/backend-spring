@@ -1,181 +1,164 @@
 package com.ecommerce.backend.application.service;
 
-import com.ecommerce.backend.application.dto.*;
-import com.ecommerce.backend.domain.entity.*;
-import com.ecommerce.backend.infrastructure.repository.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
+import com.ecommerce.backend.application.dto.ChangePasswordDto;
+import com.ecommerce.backend.application.dto.LoginHistoryDto;
+import com.ecommerce.backend.application.dto.SecurityDto;
+import com.ecommerce.backend.application.dto.SecuritySettingsDto;
+import com.ecommerce.backend.application.dto.UpdateEmailDto;
+import com.ecommerce.backend.application.exception.ApiException;
+import com.ecommerce.backend.domain.entity.LoginHistory;
+import com.ecommerce.backend.domain.entity.User;
+import com.ecommerce.backend.domain.entity.UserSettings;
+import com.ecommerce.backend.infrastructure.repository.LoginHistoryRepository;
+import com.ecommerce.backend.infrastructure.repository.UserRepository;
+import com.ecommerce.backend.infrastructure.repository.UserSettingsRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
+/**
+ * Hesap güvenliği — docs/API_CONTRACT.md §4.13, §5.6. Giriş geçmişi {@code AuthService} tarafından yazılır;
+ * güvenlik ayarları {@code user_settings} satırında saklanır.
+ */
 @Service
+@RequiredArgsConstructor
+@Slf4j
 @Transactional
 public class SecurityService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private static final Sort NEWEST_FIRST = Sort.by(Sort.Order.desc("loginAt"), Sort.Order.desc("id"));
+    private static final int RECENT_LOGIN_COUNT = 5;
+    private static final String INVALID_PASSWORD = "INVALID_PASSWORD";
 
-    @Autowired
-    private LoginHistoryRepository loginHistoryRepository;
+    private final UserRepository userRepository;
+    private final LoginHistoryRepository loginHistoryRepository;
+    private final UserSettingsRepository userSettingsRepository;
+    private final SettingsService settingsService;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    @Transactional(readOnly = true)
+    public SecurityDto getSecurityInfo(Long userId) {
+        User user = requireUser(userId);
+        List<LoginHistoryDto> recent = loginHistory(userId, 1, RECENT_LOGIN_COUNT);
+        Optional<LoginHistory> lastLogin = loginHistoryRepository
+                .findFirstByUserIdAndIsActiveTrueAndIsSuccessfulTrueOrderByLoginAtDescIdDesc(userId);
+        return new SecurityDto(user.getId(), user.getEmail(), Boolean.TRUE.equals(user.getIsEmailVerified()),
+                user.getUpdatedAt(), false,
+                lastLogin.map(LoginHistory::getLoginAt).orElse(null),
+                lastLogin.map(LoginHistory::getIpAddress).orElse(null),
+                recent);
+    }
 
-    public BaseResponseDto<SecurityDto> getSecurityInfo(Long userId) {
-        try {
-            User user = userRepository.findByIdAndIsActiveTrue(userId).orElse(null);
-            if (user == null) {
-                return BaseResponseDto.error("User not found");
-            }
+    /** {@code pageNumber} 1 tabanlı, değerler çağıran tarafından kırpılmış olmalı. */
+    @Transactional(readOnly = true)
+    public List<LoginHistoryDto> loginHistory(Long userId, int pageNumber, int pageSize) {
+        return loginHistoryRepository
+                .findByUserIdAndIsActiveTrue(userId, PageRequest.of(pageNumber - 1, pageSize, NEWEST_FIRST))
+                .stream().map(SecurityService::toDto).toList();
+    }
 
-            List<LoginHistory> recentLogins = loginHistoryRepository
-                    .findTop5ByUserIdAndIsActiveTrueOrderByLoginAtDesc(userId);
-            List<LoginHistoryDto> recentLoginDtos = recentLogins.stream()
-                    .map(this::convertToLoginHistoryDto)
-                    .collect(Collectors.toList());
+    /** İlk okumada varsayılanlar: {@code true, false, true, false, 30}. */
+    public SecuritySettingsDto getSecuritySettings(Long userId) {
+        return toDto(settingsService.loadOrCreateUserSettings(userId));
+    }
 
-            SecurityDto securityInfo = new SecurityDto(
-                    user.getId(),
-                    user.getEmail(),
-                    user.getIsEmailVerified(),
-                    user.getUpdatedAt(), // Assuming this tracks password changes
-                    false, // Implement 2FA later
-                    null, // Add this field to User entity if needed
-                    null, // Add this field to User entity if needed
-                    recentLoginDtos);
+    /** Gönderilen (null olmayan) alanlar kaydedilir. */
+    public SecuritySettingsDto updateSecuritySettings(Long userId, SecuritySettingsDto dto) {
+        UserSettings s = settingsService.loadOrCreateUserSettings(userId);
+        if (dto.getEmailNotifications() != null) {
+            s.setEmailNotifications(dto.getEmailNotifications());
+        }
+        if (dto.getSmsNotifications() != null) {
+            s.setSmsNotifications(dto.getSmsNotifications());
+        }
+        if (dto.getLoginAlerts() != null) {
+            s.setLoginAlerts(dto.getLoginAlerts());
+        }
+        if (dto.getTwoFactorRequired() != null) {
+            s.setTwoFactorRequired(dto.getTwoFactorRequired());
+        }
+        if (dto.getSessionTimeout() != null) {
+            s.setSessionTimeout(dto.getSessionTimeout());
+        }
+        s.setUpdatedAt(LocalDateTime.now());
+        return toDto(userSettingsRepository.save(s));
+    }
 
-            return BaseResponseDto.success("Security information retrieved successfully", securityInfo);
-        } catch (Exception ex) {
-            return BaseResponseDto.error("Error retrieving security information: " + ex.getMessage());
+    public void changePassword(Long userId, ChangePasswordDto dto) {
+        User user = requireUser(userId);
+        if (!passwordEncoder.matches(dto.getCurrentPassword(), user.getPassword())) {
+            throw ApiException.badRequest(INVALID_PASSWORD, "Current password is incorrect");
+        }
+        user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+        log.info("Şifre değiştirildi: userId={}", userId);
+    }
+
+    /** E-posta küçük harfe çevrilir; doğrulama durumu sıfırlanır. */
+    public void updateEmail(Long userId, UpdateEmailDto dto) {
+        User user = requireUser(userId);
+        if (!passwordEncoder.matches(dto.getCurrentPassword(), user.getPassword())) {
+            throw ApiException.badRequest(INVALID_PASSWORD, "Current password is incorrect");
+        }
+        String email = AuthService.normalizeEmail(dto.getNewEmail());
+        boolean taken = userRepository.findFirstByEmailIgnoreCase(email)
+                .filter(other -> !other.getId().equals(userId))
+                .isPresent();
+        if (taken) {
+            throw ApiException.badRequest("EMAIL_TAKEN", "Email address is already in use");
+        }
+        user.setEmail(email);
+        user.setIsEmailVerified(false);
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+        log.info("E-posta güncellendi: userId={}", userId);
+    }
+
+    /**
+     * Çağıran token hariç tüm token'ları geçersiz kılar (§5.6): iptal zamanı saniye hassasiyetinde (UTC)
+     * yazılır; {@code JwtAuthenticationFilter} {@code iat <= tokensRevokedAt} ve {@code jti != revokeExceptJti}
+     * olan token'ları reddeder.
+     */
+    public void logoutAllDevices(Long userId, String callerJti) {
+        User user = requireUser(userId);
+        user.setTokensRevokedAt(LocalDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.SECONDS));
+        user.setRevokeExceptJti(callerJti);
+        userRepository.save(user);
+        log.info("Tüm cihazlardan çıkış: userId={}", userId);
+    }
+
+    /** Taslak: yalnızca şifreyi doğrular (2FA henüz uygulanmadı). */
+    @Transactional(readOnly = true)
+    public void verifyPasswordForTwoFactor(Long userId, String password) {
+        User user = requireUser(userId);
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw ApiException.badRequest(INVALID_PASSWORD, "Password is incorrect");
         }
     }
 
-    public BaseResponseDto<String> changePassword(Long userId, ChangePasswordDto changePasswordDto) {
-        try {
-            User user = userRepository.findByIdAndIsActiveTrue(userId).orElse(null);
-            if (user == null) {
-                return BaseResponseDto.error("User not found");
-            }
-
-            // Verify current password
-            if (!passwordEncoder.matches(changePasswordDto.getCurrentPassword(), user.getPassword())) {
-                return BaseResponseDto.error("Current password is incorrect");
-            }
-
-            // Hash new password
-            String hashedNewPassword = passwordEncoder.encode(changePasswordDto.getNewPassword());
-            user.setPassword(hashedNewPassword);
-            user.setUpdatedAt(LocalDateTime.now());
-
-            userRepository.save(user);
-
-            return BaseResponseDto.success("Password changed successfully", "Password changed successfully");
-        } catch (Exception ex) {
-            return BaseResponseDto.error("Error changing password: " + ex.getMessage());
-        }
+    private User requireUser(Long userId) {
+        return userRepository.findByIdAndIsActiveTrue(userId)
+                .orElseThrow(() -> ApiException.notFound("USER_NOT_FOUND", "User not found"));
     }
 
-    public BaseResponseDto<String> updateEmail(Long userId, UpdateEmailDto updateEmailDto) {
-        try {
-            User user = userRepository.findByIdAndIsActiveTrue(userId).orElse(null);
-            if (user == null) {
-                return BaseResponseDto.error("User not found");
-            }
-
-            // Verify current password
-            if (!passwordEncoder.matches(updateEmailDto.getCurrentPassword(), user.getPassword())) {
-                return BaseResponseDto.error("Current password is incorrect");
-            }
-
-            // Check if email already exists
-            User existingUser = userRepository.findByEmailAndIsActiveTrue(updateEmailDto.getNewEmail()).orElse(null);
-            if (existingUser != null && !existingUser.getId().equals(userId)) {
-                return BaseResponseDto.error("Email address is already in use");
-            }
-
-            user.setEmail(updateEmailDto.getNewEmail());
-            user.setIsEmailVerified(false); // Require email verification
-            user.setUpdatedAt(LocalDateTime.now());
-
-            userRepository.save(user);
-
-            return BaseResponseDto.success("Email updated successfully. Please verify your new email address.",
-                    "Email updated successfully. Please verify your new email address.");
-        } catch (Exception ex) {
-            return BaseResponseDto.error("Error updating email: " + ex.getMessage());
-        }
+    private static SecuritySettingsDto toDto(UserSettings s) {
+        return new SecuritySettingsDto(s.getEmailNotifications(), s.getSmsNotifications(), s.getLoginAlerts(),
+                s.getTwoFactorRequired(), s.getSessionTimeout());
     }
 
-    public BaseResponseDto<List<LoginHistoryDto>> getLoginHistory(Long userId, int pageNumber, int pageSize) {
-        try {
-            Pageable pageable = PageRequest.of(pageNumber - 1, pageSize);
-            Page<LoginHistory> loginHistoryPage = loginHistoryRepository
-                    .findByUserIdAndIsActiveTrueOrderByLoginAtDesc(userId, pageable);
-
-            List<LoginHistoryDto> loginHistoryDtos = loginHistoryPage.getContent().stream()
-                    .map(this::convertToLoginHistoryDto)
-                    .collect(Collectors.toList());
-
-            return BaseResponseDto.success("Login history retrieved successfully", loginHistoryDtos);
-        } catch (Exception ex) {
-            return BaseResponseDto.error("Error retrieving login history: " + ex.getMessage());
-        }
-    }
-
-    public BaseResponseDto<SecuritySettingsDto> getSecuritySettings(Long userId) {
-        try {
-            // TODO: Implement security settings storage
-            // For now, return default settings
-            SecuritySettingsDto settings = new SecuritySettingsDto(
-                    true, // emailNotifications
-                    false, // smsNotifications
-                    true, // loginAlerts
-                    false, // twoFactorRequired
-                    30 // sessionTimeout
-            );
-
-            return BaseResponseDto.success("Security settings retrieved successfully", settings);
-        } catch (Exception ex) {
-            return BaseResponseDto.error("Error retrieving security settings: " + ex.getMessage());
-        }
-    }
-
-    public BaseResponseDto<SecuritySettingsDto> updateSecuritySettings(Long userId,
-            SecuritySettingsDto securitySettingsDto) {
-        try {
-            // TODO: Implement security settings storage
-            // For now, just return the updated settings
-            return BaseResponseDto.success("Security settings updated successfully", securitySettingsDto);
-        } catch (Exception ex) {
-            return BaseResponseDto.error("Error updating security settings: " + ex.getMessage());
-        }
-    }
-
-    public BaseResponseDto<String> logoutAllDevices(Long userId) {
-        try {
-            // TODO: Implement device logout logic
-            // This would typically involve invalidating all JWT tokens for the user
-            return BaseResponseDto.success("All devices logged out successfully",
-                    "All devices logged out successfully");
-        } catch (Exception ex) {
-            return BaseResponseDto.error("Error logging out all devices: " + ex.getMessage());
-        }
-    }
-
-    private LoginHistoryDto convertToLoginHistoryDto(LoginHistory loginHistory) {
-        return new LoginHistoryDto(
-                loginHistory.getId(),
-                loginHistory.getLoginAt(),
-                loginHistory.getIpAddress(),
-                loginHistory.getUserAgent(),
-                loginHistory.getLocation(),
-                loginHistory.getIsSuccessful());
+    private static LoginHistoryDto toDto(LoginHistory h) {
+        return new LoginHistoryDto(h.getId(), h.getLoginAt(), h.getIpAddress(), h.getUserAgent(), h.getLocation(),
+                Boolean.TRUE.equals(h.getIsSuccessful()));
     }
 }
