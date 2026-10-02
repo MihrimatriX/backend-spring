@@ -35,7 +35,7 @@ public class JsonAccessDeniedHandler implements AccessDeniedHandler {
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
-        BaseResponseDto<Void> body = BaseResponseDto.codedError("FORBIDDEN", "Bu işlem için yetkiniz yok.");
+        BaseResponseDto<Void> body = BaseResponseDto.fail("FORBIDDEN", "Bu işlem için yetkiniz yok.");
         ErrorResponseSupport.attachTraceId(body);
         objectMapper.writeValue(response.getOutputStream(), body);
     }

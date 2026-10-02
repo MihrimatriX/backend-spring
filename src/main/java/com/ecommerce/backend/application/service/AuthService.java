@@ -1,116 +1,107 @@
 package com.ecommerce.backend.application.service;
 
-import com.ecommerce.backend.application.dto.*;
+import com.ecommerce.backend.application.dto.AuthResponseDto;
+import com.ecommerce.backend.application.dto.LoginRequestDto;
+import com.ecommerce.backend.application.dto.RegisterRequestDto;
+import com.ecommerce.backend.application.exception.ApiException;
+import com.ecommerce.backend.domain.entity.LoginHistory;
 import com.ecommerce.backend.domain.entity.User;
+import com.ecommerce.backend.infrastructure.config.AuthProperties;
+import com.ecommerce.backend.infrastructure.repository.LoginHistoryRepository;
 import com.ecommerce.backend.infrastructure.repository.UserRepository;
-import com.ecommerce.backend.infrastructure.security.JwtUtil;
+import com.ecommerce.backend.infrastructure.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.Locale;
+import java.util.Optional;
+
+/**
+ * Kayıt / giriş — docs/API_CONTRACT.md §2, §4.1.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final LoginHistoryRepository loginHistoryRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
-    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
+    private final AuthProperties authProperties;
     private final MetricsService metricsService;
 
-    public BaseResponseDto<AuthResponseDto> register(RegisterRequestDto registerRequest) {
-        try {
-            log.info("Registering new user with email: {}", registerRequest.getEmail());
-
-            // Check if user already exists
-            if (userRepository.existsByEmail(registerRequest.getEmail())) {
-                return BaseResponseDto.error("Email is already taken");
-            }
-
-            // Create new user
-            User user = new User();
-            user.setEmail(registerRequest.getEmail());
-            user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
-            user.setFirstName(registerRequest.getFirstName());
-            user.setLastName(registerRequest.getLastName());
-            user.setPhoneNumber(registerRequest.getPhoneNumber());
-            user.setAddress(registerRequest.getAddress());
-            user.setCity(registerRequest.getCity());
-            user.setPostalCode(registerRequest.getPostalCode());
-            user.setIsEmailVerified(false);
-            user.setIsActive(true);
-
-            User savedUser = userRepository.save(user);
-
-            // Record metrics
-            metricsService.incrementUserRegistrationCounter();
-
-            // Generate JWT token
-            String token = jwtUtil.generateToken(savedUser.getEmail(), savedUser.getId());
-
-            AuthResponseDto authResponse = new AuthResponseDto(
-                    token, savedUser.getId(), savedUser.getEmail(),
-                    savedUser.getFirstName(), savedUser.getLastName(),
-                    savedUser.getIsEmailVerified());
-
-            log.info("User registered successfully with ID: {}", savedUser.getId());
-            return BaseResponseDto.success("User registered successfully", authResponse);
-        } catch (Exception e) {
-            log.error("Error during user registration", e);
-            return BaseResponseDto.error("Registration failed: " + e.getMessage());
-        }
+    public static String normalizeEmail(String email) {
+        return email == null ? null : email.trim().toLowerCase(Locale.ROOT);
     }
 
-    public BaseResponseDto<AuthResponseDto> login(LoginRequestDto loginRequest) {
-        try {
-            log.info("Login attempt for email: {}", loginRequest.getEmail());
+    @Transactional
+    public AuthResponseDto register(RegisterRequestDto request) {
+        String email = normalizeEmail(request.getEmail());
+        if (userRepository.existsByEmailIgnoreCase(email)) {
+            throw ApiException.conflict("EMAIL_TAKEN", "Email is already taken");
+        }
 
-            // Authenticate user
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            loginRequest.getEmail(),
-                            loginRequest.getPassword()));
+        User user = new User();
+        user.setEmail(email);
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setFirstName(request.getFirstName().trim());
+        user.setLastName(request.getLastName().trim());
+        user.setPhoneNumber(request.getPhoneNumber());
+        user.setAddress(request.getAddress());
+        user.setCity(request.getCity());
+        user.setPostalCode(request.getPostalCode());
+        user.setIsEmailVerified(false);
+        user.setIsActive(true);
+        User saved = userRepository.save(user);
 
-            // Get user details
-            User user = userRepository.findByEmailAndIsActiveTrue(loginRequest.getEmail())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+        metricsService.incrementUserRegistrationCounter();
+        log.info("Yeni kullanıcı kaydı: id={}", saved.getId());
+        return toResponse(saved);
+    }
 
-            // Generate JWT token
-            String token = jwtUtil.generateToken(user.getEmail(), user.getId());
-
-            AuthResponseDto authResponse = new AuthResponseDto(
-                    token, user.getId(), user.getEmail(),
-                    user.getFirstName(), user.getLastName(),
-                    user.getIsEmailVerified());
-
-            log.info("User logged in successfully with ID: {}", user.getId());
-            return BaseResponseDto.success("Login successful", authResponse);
-        } catch (BadCredentialsException e) {
-            log.error("Authentication failed for email: {}", loginRequest.getEmail());
+    /**
+     * Başarısız denemeler de (kullanıcı varsa) giriş geçmişine yazılır; {@code noRollbackFor} sayesinde
+     * hata fırlatılsa da kayıt kalıcı olur.
+     */
+    @Transactional(noRollbackFor = ApiException.class)
+    public AuthResponseDto login(LoginRequestDto request, String ipAddress, String userAgent) {
+        String email = normalizeEmail(request.getEmail());
+        Optional<User> found = userRepository.findFirstByEmailIgnoreCase(email);
+        if (found.isEmpty() || !Boolean.TRUE.equals(found.get().getIsActive())
+                || !passwordEncoder.matches(request.getPassword(), found.get().getPassword())) {
+            found.ifPresent(u -> recordLogin(u.getId(), ipAddress, userAgent, false,
+                    Boolean.TRUE.equals(u.getIsActive()) ? "Invalid password" : "Inactive account"));
             metricsService.incrementAuthenticationFailureCounter("bad_credentials");
-            return BaseResponseDto.error("Invalid email or password");
-        } catch (AuthenticationException e) {
-            log.error("Authentication failed for email: {}", loginRequest.getEmail());
-            metricsService.incrementAuthenticationFailureCounter("authentication_exception");
-            return BaseResponseDto.error("Invalid email or password");
-        } catch (Exception e) {
-            log.error("Error during login", e);
-            metricsService.incrementAuthenticationFailureCounter("general_exception");
-            return BaseResponseDto.error("Login failed: " + e.getMessage());
+            throw ApiException.unauthorized("INVALID_CREDENTIALS", "Invalid email or password");
         }
+
+        User user = found.get();
+        recordLogin(user.getId(), ipAddress, userAgent, true, null);
+        return toResponse(user);
     }
 
-    public BaseResponseDto<String> logout() {
-        // JWT is stateless, so logout is handled on client side
-        // In a more complex system, you might want to blacklist the token
-        return BaseResponseDto.success("Logout successful", "User logged out successfully");
+    private void recordLogin(Long userId, String ip, String userAgent, boolean success, String failureReason) {
+        LoginHistory entry = new LoginHistory(userId, LocalDateTime.now(), truncate(ip, 45), truncate(userAgent, 500),
+                null, success, failureReason);
+        loginHistoryRepository.save(entry);
+    }
+
+    private AuthResponseDto toResponse(User user) {
+        String role = authProperties.roleFor(user.getEmail());
+        String token = jwtService.generateToken(user, role);
+        return AuthResponseDto.bearer(token, user.getId(), user.getEmail(), user.getFirstName(), user.getLastName(),
+                user.getIsEmailVerified(), role);
+    }
+
+    private static String truncate(String value, int max) {
+        if (value == null) {
+            return null;
+        }
+        return value.length() <= max ? value : value.substring(0, max);
     }
 }

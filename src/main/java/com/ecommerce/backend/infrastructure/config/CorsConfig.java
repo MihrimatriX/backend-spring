@@ -1,6 +1,7 @@
 package com.ecommerce.backend.infrastructure.config;
 
 import org.springframework.beans.factory.annotation.Value;
+import com.ecommerce.backend.infrastructure.logging.CorrelationIdConstants;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
@@ -30,7 +31,7 @@ public class CorsConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         // Parse allowed origins
-        List<String> origins = Arrays.asList(allowedOrigins.split(","));
+        List<String> origins = Arrays.stream(allowedOrigins.split(",")).map(String::trim).filter(o -> !o.isEmpty()).toList();
         configuration.setAllowedOriginPatterns(origins);
 
         // Parse allowed methods
@@ -46,6 +47,7 @@ public class CorsConfig {
         }
 
         configuration.setAllowCredentials(allowCredentials);
+        configuration.setExposedHeaders(List.of(CorrelationIdConstants.HEADER, "Retry-After", "X-Rate-Limit-Remaining"));
         configuration.setMaxAge(3600L); // 1 hour
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

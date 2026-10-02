@@ -5,7 +5,7 @@ import com.ecommerce.backend.application.dto.CreateOrderDto;
 import com.ecommerce.backend.application.dto.CreateOrderItemDto;
 import com.ecommerce.backend.application.dto.OrderDto;
 import com.ecommerce.backend.application.service.OrderService;
-import com.ecommerce.backend.infrastructure.security.JwtUtil;
+import com.ecommerce.backend.infrastructure.security.CurrentUserService;
 import com.ecommerce.backend.infrastructure.web.exception.GlobalExceptionHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,20 +41,20 @@ class OrderControllerWebMvcTest {
     private OrderService orderService;
 
     @Mock
-    private JwtUtil jwtUtil;
+    private CurrentUserService currentUserService;
 
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(new OrderController(orderService, jwtUtil))
+        mockMvc = MockMvcBuilders.standaloneSetup(new OrderController(orderService, currentUserService))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }
 
     @Test
     void rejectsShortIdempotencyKey() throws Exception {
-        when(jwtUtil.extractUserId(any(HttpServletRequest.class))).thenReturn(1L);
+        when(currentUserService.requireUserId()).thenReturn(1L);
 
         String body = objectMapper.writeValueAsString(sampleCreateOrderDto());
 
@@ -67,7 +67,7 @@ class OrderControllerWebMvcTest {
 
     @Test
     void forwardsNormalizedIdempotencyKeyToService() throws Exception {
-        when(jwtUtil.extractUserId(any(HttpServletRequest.class))).thenReturn(42L);
+        when(currentUserService.requireUserId()).thenReturn(42L);
         OrderDto dto = new OrderDto();
         dto.setId(99L);
         when(orderService.createOrder(eq(42L), any(), eq("MY-LONG-KEY-001")))

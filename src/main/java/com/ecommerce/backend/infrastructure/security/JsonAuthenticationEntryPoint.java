@@ -35,7 +35,7 @@ public class JsonAuthenticationEntryPoint implements AuthenticationEntryPoint {
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
-        BaseResponseDto<Void> body = BaseResponseDto.codedError("UNAUTHORIZED", "Kimlik doğrulama gerekli.");
+        BaseResponseDto<Void> body = BaseResponseDto.fail("UNAUTHORIZED", "Kimlik doğrulama gerekli.");
         ErrorResponseSupport.attachTraceId(body);
         objectMapper.writeValue(response.getOutputStream(), body);
     }

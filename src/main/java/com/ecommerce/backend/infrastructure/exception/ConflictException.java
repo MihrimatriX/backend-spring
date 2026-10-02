@@ -1,16 +1,18 @@
 package com.ecommerce.backend.infrastructure.exception;
 
+import com.ecommerce.backend.application.exception.ApiException;
+import org.springframework.http.HttpStatus;
+
 /**
- * Thrown when optimistic locking or concurrent business rules block progress
- * (HTTP 409).
+ * İyimser kilit veya eşzamanlı iş kuralı çakışması (HTTP 409, {@code CONFLICT}).
  */
-public class ConflictException extends RuntimeException {
+public class ConflictException extends ApiException {
 
     public ConflictException(String message) {
-        super(message);
+        super(HttpStatus.CONFLICT, "CONFLICT", message);
     }
 
     public ConflictException(String message, Throwable cause) {
-        super(message, cause);
+        super(HttpStatus.CONFLICT, "CONFLICT", message, cause);
     }
 }

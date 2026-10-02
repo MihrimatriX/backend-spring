@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -60,13 +61,23 @@ public class User extends BaseEntity {
     @Column(name = "is_email_verified", nullable = false)
     private Boolean isEmailVerified = false;
 
-    @Column(name = "is_active", nullable = false)
-    private Boolean isActive = true;
+    /** {@code logout-all-devices}: bu zamana eşit/önce verilen token'lar geçersizdir. */
+    @Column(name = "tokens_revoked_at")
+    private LocalDateTime tokensRevokedAt;
+
+    /** İptal sırasında geçerli kalan (çağıran) token'ın {@code jti} değeri. */
+    @Size(max = 64)
+    @Column(name = "revoke_except_jti", length = 64)
+    private String revokeExceptJti;
 
     // Navigation properties
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Review> reviews;
 
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Order> orders;
 

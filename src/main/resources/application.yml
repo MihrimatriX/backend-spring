@@ -4,6 +4,16 @@ spring:
     name: ecommerce-backend
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
+  jackson:
+    # docs/API_CONTRACT.md §1 — nesne içindeki null alanlar yazılır, bilinmeyen alanlar yok sayılır
+    default-property-inclusion: always
+    deserialization:
+      fail-on-unknown-properties: false
+
+server:
+  error:
+    whitelabel:
+      enabled: false
 
 # Feature flags (overridden per profile)
 app:
@@ -14,6 +24,19 @@ app:
   ecommerce:
     # Üretimde kapalı tutun; dev/docker’da sipariş kargo simülasyonu için açılabilir
     demo-fulfillment-enabled: false
+  # Bu e-postalar "Admin" rolü alır (.NET: Auth:AdminEmails)
+  auth:
+    admin-emails: ${ADMIN_EMAILS:admin@example.com,manager@shop.demo}
+  # Kargo kuralları (TRY) — .NET: Checkout:*
+  checkout:
+    free-shipping-threshold: 150.00
+    standard-shipping-fee: 34.99
+    simulated-payment-decline-percent: 0
+  # IP başına dakikalık istek limiti; 0 = kapalı
+  rate-limit:
+    permit-per-minute: ${RATE_LIMIT:300}
+  # Hata cevaplarında "error" alanına teknik ayrıntı yaz (yalnızca geliştirme)
+  expose-error-details: false
 
 # Resilience4j — transient broker / network failures (orderEvents)
 resilience4j:
@@ -32,7 +55,9 @@ resilience4j:
 # JWT Configuration
 jwt:
   secret: ${JWT_SECRET:mySecretKeyThatIsAtLeast256BitsLongForJWTTokenSecurity}
-  expiration: ${JWT_EXPIRATION:86400000} # 24 hours
+  expiration: ${JWT_EXPIRATION:86400000} # 24 saat (ms)
+  issuer: ${JWT_ISSUER:EcommerceBackend}
+  audience: ${JWT_AUDIENCE:EcommerceUsers}
 
 # CORS Configuration
 cors:
@@ -40,11 +65,6 @@ cors:
   allowed-methods: GET,POST,PUT,DELETE,OPTIONS
   allowed-headers: "*"
   allow-credentials: true
-
-# Security Configuration
-security:
-  rate-limit:
-    requests-per-minute: ${RATE_LIMIT:100}
 
 # Varsayılan log formatı — korelasyon kimliği destek ve hata ayıklama için
 logging:

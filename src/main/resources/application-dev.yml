@@ -9,6 +9,7 @@ app:
     enabled: false
   ecommerce:
     demo-fulfillment-enabled: true
+  expose-error-details: true
 
 spring:
   autoconfigure:
@@ -33,13 +34,11 @@ spring:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: create-drop
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
         jdbc:
           time_zone: UTC
-        use_sql_comments: true
 
   # H2 Console (enabled for development)
   h2:
@@ -52,15 +51,11 @@ spring:
     enabled: false
 
 # Logging Configuration
+# SQL loglarını görmek için: --logging.level.org.hibernate.SQL=DEBUG
 logging:
   level:
     root: INFO
     com.ecommerce.backend: DEBUG
-    org.springframework.web: DEBUG
-    org.springframework.security: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-    org.springframework.transaction: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [cid=%X{correlationId:-}] %logger{40} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [cid=%X{correlationId:-}] %logger{40} - %msg%n"

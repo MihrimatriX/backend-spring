@@ -1,71 +1,49 @@
 package com.ecommerce.backend.infrastructure.web.controller;
 
-import com.ecommerce.backend.application.dto.*;
+import com.ecommerce.backend.application.dto.AuthResponseDto;
+import com.ecommerce.backend.application.dto.BaseResponseDto;
+import com.ecommerce.backend.application.dto.LoginRequestDto;
+import com.ecommerce.backend.application.dto.RegisterRequestDto;
 import com.ecommerce.backend.application.service.AuthService;
+import com.ecommerce.backend.infrastructure.web.support.ApiResponses;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-@Slf4j
-@Tag(name = "Authentication", description = "APIs for user authentication and registration")
+@Tag(name = "Auth", description = "Kayıt, giriş, çıkış")
 public class AuthController {
 
     private final AuthService authService;
 
     @PostMapping("/register")
-    @Operation(summary = "Register a new user", description = "Create a new user account")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "User registered successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid input data"),
-            @ApiResponse(responseCode = "409", description = "Email already exists")
-    })
-    public ResponseEntity<BaseResponseDto<AuthResponseDto>> register(
-            @Valid @RequestBody RegisterRequestDto registerRequest) {
-        log.info("Registration request for email: {}", registerRequest.getEmail());
-        BaseResponseDto<AuthResponseDto> response = authService.register(registerRequest);
-
-        if (response.isSuccess()) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
-        }
+    @Operation(summary = "Yeni kullanıcı kaydı (201)")
+    public ResponseEntity<BaseResponseDto<AuthResponseDto>> register(@Valid @RequestBody RegisterRequestDto request) {
+        return ApiResponses.created("User registered successfully", authService.register(request));
     }
 
     @PostMapping("/login")
-    @Operation(summary = "User login", description = "Authenticate user and return JWT token")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Login successful"),
-            @ApiResponse(responseCode = "401", description = "Invalid credentials"),
-            @ApiResponse(responseCode = "400", description = "Invalid input data")
-    })
-    public ResponseEntity<BaseResponseDto<AuthResponseDto>> login(@Valid @RequestBody LoginRequestDto loginRequest) {
-        log.info("Login request for email: {}", loginRequest.getEmail());
-        BaseResponseDto<AuthResponseDto> response = authService.login(loginRequest);
-
-        if (response.isSuccess()) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
-        }
+    @Operation(summary = "Giriş; hatalı bilgide 401 INVALID_CREDENTIALS")
+    public ResponseEntity<BaseResponseDto<AuthResponseDto>> login(@Valid @RequestBody LoginRequestDto request,
+            HttpServletRequest http) {
+        AuthResponseDto auth = authService.login(request, ApiResponses.clientIp(http),
+                http.getHeader(HttpHeaders.USER_AGENT));
+        return ApiResponses.ok("Login successful", auth);
     }
 
     @PostMapping("/logout")
-    @Operation(summary = "User logout", description = "Logout user (JWT is stateless)")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Logout successful")
-    })
+    @Operation(summary = "Çıkış (JWT durumsuz; istemci token'ı siler)")
     public ResponseEntity<BaseResponseDto<String>> logout() {
-        log.info("Logout request");
-        BaseResponseDto<String> response = authService.logout();
-        return ResponseEntity.ok(response);
+        return ApiResponses.ok("User logged out successfully", "Logout successful");
     }
 }
