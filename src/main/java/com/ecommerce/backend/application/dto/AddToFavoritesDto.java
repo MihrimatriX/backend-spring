@@ -1,10 +1,9 @@
 package com.ecommerce.backend.application.dto;
 
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+/** {@code POST /api/favorite/add}; ürün yoksa 400 {@code PRODUCT_NOT_FOUND}. */
 @Data
 public class AddToFavoritesDto {
-    @NotNull(message = "Product ID is required")
     private Long productId;
 }

@@ -1,35 +1,34 @@
 package com.ecommerce.backend.infrastructure.repository;
 
 import com.ecommerce.backend.domain.entity.Order;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
-    List<Order> findByUserIdOrderByCreatedAtDesc(Long userId);
+    /** DTO için gereken ilişkiler tek sorguda yüklenir. */
+    String DETAILS = "SELECT o FROM Order o LEFT JOIN FETCH o.items i LEFT JOIN FETCH i.product "
+            + "LEFT JOIN FETCH o.user LEFT JOIN FETCH o.shippingAddress LEFT JOIN FETCH o.billingAddress "
+            + "LEFT JOIN FETCH o.paymentMethod ";
 
-    List<Order> findByUserIdAndIsActiveTrueOrderByCreatedAtDesc(Long userId);
+    @Query(DETAILS + "WHERE o.id = :id")
+    Optional<Order> findDetailedById(@Param("id") Long id);
 
-    Optional<Order> findByIdAndUserId(Long id, Long userId);
+    @Query(DETAILS + "WHERE o.userId = :userId ORDER BY o.createdAt DESC, o.id DESC")
+    List<Order> findDetailedByUserId(@Param("userId") Long userId);
 
-    Optional<Order> findByIdAndUserIdAndIsActiveTrue(Long id, Long userId);
+    @Query(DETAILS + "WHERE o.id IN :ids ORDER BY o.createdAt DESC, o.id DESC")
+    List<Order> findDetailedByIdIn(@Param("ids") Collection<Long> ids);
 
-    @Query("SELECT o FROM Order o ORDER BY o.createdAt DESC")
-    List<Order> findAllOrderByCreatedAtDesc();
-
-    Page<Order> findByIsActiveTrueOrderByCreatedAtDesc(Pageable pageable);
-
-    @Query("SELECT o FROM Order o WHERE o.orderNumber = :orderNumber AND o.isActive = true")
-    Optional<Order> findByOrderNumberAndIsActiveTrue(@Param("orderNumber") String orderNumber);
-
-    @Query("SELECT COUNT(o) FROM Order o WHERE o.userId = :userId AND o.isActive = true")
-    Long countByUserIdAndIsActiveTrue(@Param("userId") Long userId);
+    /** Yönetici listesi: önce sayfadaki id'ler (koleksiyon fetch'i ile sayfalama yapılmaz). */
+    @Query("SELECT o.id FROM Order o ORDER BY o.createdAt DESC, o.id DESC")
+    List<Long> findIdsNewestFirst(Pageable pageable);
 }

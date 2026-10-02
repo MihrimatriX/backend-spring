@@ -1,136 +1,81 @@
 package com.ecommerce.backend.infrastructure.web.controller;
 
-import com.ecommerce.backend.application.dto.*;
+import com.ecommerce.backend.application.dto.AddressDto;
+import com.ecommerce.backend.application.dto.BaseResponseDto;
+import com.ecommerce.backend.application.dto.CreateAddressDto;
+import com.ecommerce.backend.application.dto.UpdateAddressDto;
+import com.ecommerce.backend.application.exception.ApiException;
 import com.ecommerce.backend.application.service.AddressService;
+import com.ecommerce.backend.infrastructure.security.CurrentUserService;
+import com.ecommerce.backend.infrastructure.web.support.ApiResponses;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/** Adresler — docs/API_CONTRACT.md §4.8 (kullanıcı yalnızca kendi adreslerine erişir). */
 @RestController
 @RequestMapping("/api/address")
+@RequiredArgsConstructor
 @Tag(name = "Address Management", description = "APIs for managing user addresses")
 public class AddressController {
 
-    @Autowired
-    private AddressService addressService;
-
-    @Autowired
-    private com.ecommerce.backend.infrastructure.security.CurrentUserService currentUserService;
+    private final AddressService addressService;
+    private final CurrentUserService currentUserService;
 
     @GetMapping("/user/{userId}")
-    @Operation(summary = "Get user addresses", description = "Retrieve all addresses for a specific user")
+    @Operation(summary = "Get user addresses", description = "Default first, then newest")
     public ResponseEntity<BaseResponseDto<List<AddressDto>>> getUserAddresses(@PathVariable Long userId) {
-        try {
-            Long currentUserId = getCurrentUserId();
-            if (!currentUserId.equals(userId)) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(BaseResponseDto.error("You can only access your own addresses"));
-            }
-
-            BaseResponseDto<List<AddressDto>> result = addressService.getUserAddresses(userId);
-            return ResponseEntity.ok(result);
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(BaseResponseDto.error("Error retrieving user addresses: " + ex.getMessage()));
+        if (!currentUserService.requireUserId().equals(userId)) {
+            throw ApiException.forbidden("You can only access your own addresses");
         }
+        return ApiResponses.ok("Addresses retrieved successfully", addressService.getUserAddresses(userId));
     }
 
     @GetMapping("/{addressId}")
-    @Operation(summary = "Get address by ID", description = "Retrieve a specific address by ID")
+    @Operation(summary = "Get address by ID")
     public ResponseEntity<BaseResponseDto<AddressDto>> getAddress(@PathVariable Long addressId) {
-        try {
-            Long currentUserId = getCurrentUserId();
-            BaseResponseDto<AddressDto> result = addressService.getAddressById(addressId, currentUserId);
-
-            if (result.isSuccess() && result.getData() != null) {
-                return ResponseEntity.ok(result);
-            }
-            return ResponseEntity.notFound().build();
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(BaseResponseDto.error("Error retrieving address: " + ex.getMessage()));
-        }
+        return ApiResponses.ok("Address retrieved successfully",
+                addressService.getAddress(addressId, currentUserService.requireUserId()));
     }
 
     @PostMapping
-    @Operation(summary = "Create address", description = "Create a new address")
-    public ResponseEntity<BaseResponseDto<AddressDto>> createAddress(
-            @Valid @RequestBody CreateAddressDto createAddressDto) {
-        try {
-            Long currentUserId = getCurrentUserId();
-            BaseResponseDto<AddressDto> result = addressService.createAddress(currentUserId, createAddressDto);
-
-            if (result.isSuccess()) {
-                return ResponseEntity.status(HttpStatus.CREATED).body(result);
-            }
-            return ResponseEntity.badRequest().body(result);
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(BaseResponseDto.error("Error creating address: " + ex.getMessage()));
-        }
+    @Operation(summary = "Create address")
+    public ResponseEntity<BaseResponseDto<AddressDto>> createAddress(@Valid @RequestBody CreateAddressDto dto) {
+        return ApiResponses.created("Address created successfully",
+                addressService.createAddress(currentUserService.requireUserId(), dto));
     }
 
     @PutMapping("/{addressId}")
-    @Operation(summary = "Update address", description = "Update an existing address")
-    public ResponseEntity<BaseResponseDto<AddressDto>> updateAddress(
-            @PathVariable Long addressId,
-            @Valid @RequestBody UpdateAddressDto updateAddressDto) {
-        try {
-            Long currentUserId = getCurrentUserId();
-            BaseResponseDto<AddressDto> result = addressService.updateAddress(addressId, currentUserId,
-                    updateAddressDto);
-
-            if (result.isSuccess()) {
-                return ResponseEntity.ok(result);
-            }
-            return ResponseEntity.badRequest().body(result);
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(BaseResponseDto.error("Error updating address: " + ex.getMessage()));
-        }
+    @Operation(summary = "Update address")
+    public ResponseEntity<BaseResponseDto<AddressDto>> updateAddress(@PathVariable Long addressId,
+            @Valid @RequestBody UpdateAddressDto dto) {
+        return ApiResponses.ok("Address updated successfully",
+                addressService.updateAddress(addressId, currentUserService.requireUserId(), dto));
     }
 
     @DeleteMapping("/{addressId}")
-    @Operation(summary = "Delete address", description = "Delete an address")
+    @Operation(summary = "Delete address (soft)")
     public ResponseEntity<BaseResponseDto<String>> deleteAddress(@PathVariable Long addressId) {
-        try {
-            Long currentUserId = getCurrentUserId();
-            BaseResponseDto<String> result = addressService.deleteAddress(addressId, currentUserId);
-
-            if (result.isSuccess()) {
-                return ResponseEntity.ok(result);
-            }
-            return ResponseEntity.badRequest().body(result);
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(BaseResponseDto.error("Error deleting address: " + ex.getMessage()));
-        }
+        addressService.deleteAddress(addressId, currentUserService.requireUserId());
+        return ApiResponses.ok("Address deleted successfully", "Address deleted successfully");
     }
 
     @PutMapping("/{addressId}/default")
-    @Operation(summary = "Set default address", description = "Set an address as default")
+    @Operation(summary = "Set default address")
     public ResponseEntity<BaseResponseDto<AddressDto>> setDefaultAddress(@PathVariable Long addressId) {
-        try {
-            Long currentUserId = getCurrentUserId();
-            BaseResponseDto<AddressDto> result = addressService.setDefaultAddress(addressId, currentUserId);
-
-            if (result.isSuccess()) {
-                return ResponseEntity.ok(result);
-            }
-            return ResponseEntity.badRequest().body(result);
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(BaseResponseDto.error("Error setting default address: " + ex.getMessage()));
-        }
-    }
-
-    private Long getCurrentUserId() {
-        return currentUserService.requireUserId();
+        return ApiResponses.ok("Default address set successfully",
+                addressService.setDefaultAddress(addressId, currentUserService.requireUserId()));
     }
 }

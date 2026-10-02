@@ -11,8 +11,9 @@ public class CreatePaymentMethodDto {
     @Size(max = 100, message = "Card holder name cannot exceed 100 characters")
     private String cardHolderName;
 
+    /** Boşluk/tire temizlendikten sonra 12–19 rakam (aksi 400 INVALID_CARD_NUMBER); PUT'ta maskeli gelirse korunur. */
     @NotBlank(message = "Card number is required")
-    @Size(max = 20, message = "Card number cannot exceed 20 characters")
+    @Size(max = 64, message = "Card number cannot exceed 64 characters")
     private String cardNumber;
 
     @NotNull(message = "Expiry month is required")
@@ -25,6 +26,7 @@ public class CreatePaymentMethodDto {
     @Max(value = 2050, message = "Expiry year must be between 2024 and 2050")
     private Integer expiryYear;
 
+    /** Kabul edilir ama hiçbir zaman saklanmaz. */
     @Size(max = 10, message = "CVV cannot exceed 10 characters")
     private String cvv;
 
