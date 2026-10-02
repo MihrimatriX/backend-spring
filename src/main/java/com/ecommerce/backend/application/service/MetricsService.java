@@ -1,11 +1,17 @@
 package com.ecommerce.backend.application.service;
 
 import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.LongTaskTimer;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -13,6 +19,33 @@ import org.springframework.stereotype.Service;
 public class MetricsService {
 
     private final MeterRegistry meterRegistry;
+    private final EntityManager entityManager;
+
+    /**
+     * {@code GET /api/metrics/custom} gövdesi (docs/API_CONTRACT.md §4.16). Sipariş ve stoktaki ürün sayıları
+     * veritabanından, HTTP sayıları Micrometer {@code http.server.requests} ölçümlerinden okunur.
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Object> customMetrics() {
+        long httpRequests = meterRegistry.find("http.server.requests").timers().stream()
+                .mapToLong(Timer::count).sum();
+        long activeRequests = meterRegistry.find("http.server.requests.active").longTaskTimers().stream()
+                .mapToLong(LongTaskTimer::activeTasks).sum();
+        long orders = entityManager.createQuery(
+                "SELECT COUNT(o) FROM Order o WHERE o.isActive = true", Long.class).getSingleResult();
+        long productsInStock = entityManager.createQuery(
+                "SELECT COUNT(p) FROM Product p WHERE p.isActive = true AND p.unitInStock > 0", Long.class)
+                .getSingleResult();
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("httpRequests", Map.of("total", httpRequests, "description", "Total HTTP requests"));
+        body.put("httpRequestDuration", Map.of("description", "HTTP request duration histogram"));
+        body.put("activeConnections", Map.of("value", activeRequests, "description", "Number of active connections"));
+        body.put("orders", Map.of("total", orders, "description", "Total orders"));
+        body.put("products", Map.of("inStock", productsInStock, "description", "Number of products in stock"));
+        body.put("timestamp", System.currentTimeMillis());
+        return body;
+    }
 
     public void incrementOrderCounter() {
         Counter.builder("ecommerce.orders.total")
