@@ -1,178 +1,90 @@
 package com.ecommerce.backend.application.service;
 
-import com.ecommerce.backend.application.dto.*;
+import com.ecommerce.backend.application.dto.CampaignDto;
+import com.ecommerce.backend.application.dto.CampaignRequestDto;
+import com.ecommerce.backend.application.exception.ApiException;
 import com.ecommerce.backend.domain.entity.Campaign;
 import com.ecommerce.backend.infrastructure.repository.CampaignRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
+/**
+ * Kampanyalar — docs/API_CONTRACT.md §4.5.
+ */
 @Service
 @RequiredArgsConstructor
-@Slf4j
-@Transactional
+@Transactional(readOnly = true)
 public class CampaignService {
 
     private final CampaignRepository campaignRepository;
 
-    @Transactional(readOnly = true)
-    public BaseResponseDto<List<CampaignDto>> getAllCampaigns() {
-        try {
-            List<Campaign> campaigns = campaignRepository.findByIsActiveTrueOrderByCreatedAtDesc();
-            List<CampaignDto> campaignDtos = campaigns.stream()
-                    .map(this::convertToDto)
-                    .collect(Collectors.toList());
-
-            return BaseResponseDto.success("Campaigns retrieved successfully", campaignDtos);
-        } catch (Exception e) {
-            log.error("Error retrieving campaigns: {}", e.getMessage(), e);
-            return BaseResponseDto.error("Error retrieving campaigns: " + e.getMessage());
-        }
+    public List<CampaignDto> getAll() {
+        return campaignRepository.findByIsActiveTrueOrderByCreatedAtDescIdDesc().stream().map(CampaignService::toDto)
+                .toList();
     }
 
-    @Transactional(readOnly = true)
-    public BaseResponseDto<List<CampaignDto>> getActiveCampaigns() {
-        try {
-            LocalDateTime now = LocalDateTime.now();
-            List<Campaign> campaigns = campaignRepository
-                    .findByIsActiveTrueAndStartDateLessThanEqualAndEndDateGreaterThanEqualOrderByCreatedAtDesc(now,
-                            now);
-            List<CampaignDto> campaignDtos = campaigns.stream()
-                    .map(this::convertToDto)
-                    .collect(Collectors.toList());
-
-            return BaseResponseDto.success("Active campaigns retrieved successfully", campaignDtos);
-        } catch (Exception e) {
-            log.error("Error retrieving active campaigns: {}", e.getMessage(), e);
-            return BaseResponseDto.error("Error retrieving active campaigns: " + e.getMessage());
-        }
+    public List<CampaignDto> getRunning() {
+        return campaignRepository.findRunning(LocalDateTime.now()).stream().map(CampaignService::toDto).toList();
     }
 
-    @Transactional(readOnly = true)
-    public BaseResponseDto<CampaignDto> getCampaignById(Long id) {
-        try {
-            Campaign campaign = campaignRepository.findByIdAndIsActiveTrue(id)
-                    .orElse(null);
-
-            if (campaign == null) {
-                return BaseResponseDto.error("Campaign not found");
-            }
-
-            CampaignDto campaignDto = convertToDto(campaign);
-            return BaseResponseDto.success("Campaign retrieved successfully", campaignDto);
-        } catch (Exception e) {
-            log.error("Error retrieving campaign: {}", e.getMessage(), e);
-            return BaseResponseDto.error("Error retrieving campaign: " + e.getMessage());
-        }
+    public CampaignDto getById(Long id) {
+        return campaignRepository.findByIdAndIsActiveTrue(id).map(CampaignService::toDto)
+                .orElseThrow(CampaignService::notFound);
     }
 
-    public BaseResponseDto<CampaignDto> createCampaign(CreateCampaignDto createCampaignDto) {
-        try {
-            Campaign campaign = new Campaign();
-            campaign.setTitle(createCampaignDto.getTitle());
-            campaign.setSubtitle(createCampaignDto.getSubtitle());
-            campaign.setDescription(createCampaignDto.getDescription());
-            campaign.setDiscount(createCampaignDto.getDiscount());
-            campaign.setImageUrl(createCampaignDto.getImageUrl());
-            campaign.setBackgroundColor(createCampaignDto.getBackgroundColor());
-            campaign.setTimeLeft(createCampaignDto.getTimeLeft());
-            campaign.setButtonText(createCampaignDto.getButtonText());
-            campaign.setButtonHref(createCampaignDto.getButtonHref());
-            campaign.setStartDate(createCampaignDto.getStartDate());
-            campaign.setEndDate(createCampaignDto.getEndDate());
-            campaign.setIsActive(createCampaignDto.getIsActive());
-            campaign.setCreatedAt(LocalDateTime.now());
-            campaign.setUpdatedAt(LocalDateTime.now());
-
-            Campaign savedCampaign = campaignRepository.save(campaign);
-            CampaignDto campaignDto = convertToDto(savedCampaign);
-
-            return BaseResponseDto.success("Campaign created successfully", campaignDto);
-        } catch (Exception e) {
-            log.error("Error creating campaign: {}", e.getMessage(), e);
-            return BaseResponseDto.error("Error creating campaign: " + e.getMessage());
-        }
+    @Transactional
+    public CampaignDto create(CampaignRequestDto request) {
+        Campaign campaign = new Campaign();
+        apply(campaign, request);
+        campaign.setIsActive(request.isActive() == null || request.isActive());
+        return toDto(campaignRepository.save(campaign));
     }
 
-    public BaseResponseDto<CampaignDto> updateCampaign(Long id, UpdateCampaignDto updateCampaignDto) {
-        try {
-            Campaign campaign = campaignRepository.findByIdAndIsActiveTrue(id)
-                    .orElse(null);
-
-            if (campaign == null) {
-                return BaseResponseDto.error("Campaign not found");
-            }
-
-            campaign.setTitle(updateCampaignDto.getTitle());
-            campaign.setSubtitle(updateCampaignDto.getSubtitle());
-            campaign.setDescription(updateCampaignDto.getDescription());
-            campaign.setDiscount(updateCampaignDto.getDiscount());
-            campaign.setImageUrl(updateCampaignDto.getImageUrl());
-            campaign.setBackgroundColor(updateCampaignDto.getBackgroundColor());
-            campaign.setTimeLeft(updateCampaignDto.getTimeLeft());
-            campaign.setButtonText(updateCampaignDto.getButtonText());
-            campaign.setButtonHref(updateCampaignDto.getButtonHref());
-            campaign.setStartDate(updateCampaignDto.getStartDate());
-            campaign.setEndDate(updateCampaignDto.getEndDate());
-            campaign.setIsActive(updateCampaignDto.getIsActive());
-            campaign.setUpdatedAt(LocalDateTime.now());
-
-            Campaign savedCampaign = campaignRepository.save(campaign);
-            CampaignDto campaignDto = convertToDto(savedCampaign);
-
-            return BaseResponseDto.success("Campaign updated successfully", campaignDto);
-        } catch (Exception e) {
-            log.error("Error updating campaign: {}", e.getMessage(), e);
-            return BaseResponseDto.error("Error updating campaign: " + e.getMessage());
+    @Transactional
+    public CampaignDto update(Long id, CampaignRequestDto request) {
+        Campaign campaign = campaignRepository.findById(id).orElseThrow(CampaignService::notFound);
+        apply(campaign, request);
+        if (request.isActive() != null) {
+            campaign.setIsActive(request.isActive());
         }
+        return toDto(campaignRepository.save(campaign));
     }
 
-    public BaseResponseDto<String> deleteCampaign(Long id) {
-        try {
-            Campaign campaign = campaignRepository.findByIdAndIsActiveTrue(id)
-                    .orElse(null);
-
-            if (campaign == null) {
-                return BaseResponseDto.error("Campaign not found");
-            }
-
-            campaign.setIsActive(false);
-            campaign.setUpdatedAt(LocalDateTime.now());
-            campaignRepository.save(campaign);
-
-            return BaseResponseDto.success("Campaign deleted successfully", "Campaign deleted successfully");
-        } catch (Exception e) {
-            log.error("Error deleting campaign: {}", e.getMessage(), e);
-            return BaseResponseDto.error("Error deleting campaign: " + e.getMessage());
-        }
+    @Transactional
+    public void delete(Long id) {
+        Campaign campaign = campaignRepository.findByIdAndIsActiveTrue(id).orElseThrow(CampaignService::notFound);
+        campaign.setIsActive(false);
+        campaignRepository.save(campaign);
     }
 
-    private CampaignDto convertToDto(Campaign campaign) {
-        CampaignDto dto = new CampaignDto();
-        dto.setId(campaign.getId());
-        dto.setTitle(campaign.getTitle());
-        dto.setSubtitle(campaign.getSubtitle());
-        dto.setDescription(campaign.getDescription());
-        dto.setDiscount(campaign.getDiscount());
-        dto.setImageUrl(campaign.getImageUrl());
-        dto.setBackgroundColor(campaign.getBackgroundColor());
-        dto.setTimeLeft(campaign.getTimeLeft());
-        dto.setButtonText(campaign.getButtonText());
-        dto.setButtonHref(campaign.getButtonHref());
-        dto.setIsActive(campaign.getIsActive());
-        dto.setStartDate(campaign.getStartDate());
-        dto.setEndDate(campaign.getEndDate());
-        dto.setCreatedAt(campaign.getCreatedAt());
-        dto.setUpdatedAt(campaign.getUpdatedAt());
-        return dto;
+    private static void apply(Campaign c, CampaignRequestDto r) {
+        if (r.endDate().isBefore(r.startDate())) {
+            throw ApiException.badRequest("INVALID_DATE_RANGE", "End date must be after start date");
+        }
+        c.setTitle(r.title().trim());
+        c.setSubtitle(r.subtitle());
+        c.setDescription(r.description());
+        c.setDiscount(r.discount() == null ? 0 : r.discount());
+        c.setImageUrl(r.imageUrl());
+        c.setBackgroundColor(r.backgroundColor());
+        c.setTimeLeft(r.timeLeft());
+        c.setButtonText(r.buttonText());
+        c.setButtonHref(r.buttonHref());
+        c.setStartDate(r.startDate());
+        c.setEndDate(r.endDate());
+    }
+
+    private static ApiException notFound() {
+        return ApiException.notFound("CAMPAIGN_NOT_FOUND", "Campaign not found");
+    }
+
+    private static CampaignDto toDto(Campaign c) {
+        return new CampaignDto(c.getId(), c.getTitle(), c.getSubtitle(), c.getDescription(), c.getDiscount(),
+                c.getImageUrl(), c.getBackgroundColor(), c.getTimeLeft(), c.getButtonText(), c.getButtonHref(),
+                c.getIsActive(), c.getStartDate(), c.getEndDate(), c.getCreatedAt(), c.getUpdatedAt());
     }
 }
