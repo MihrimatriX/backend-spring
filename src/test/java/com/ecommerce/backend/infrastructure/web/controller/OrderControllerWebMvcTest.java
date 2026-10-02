@@ -1,6 +1,5 @@
 package com.ecommerce.backend.infrastructure.web.controller;
 
-import com.ecommerce.backend.application.dto.BaseResponseDto;
 import com.ecommerce.backend.application.dto.CreateOrderDto;
 import com.ecommerce.backend.application.dto.CreateOrderItemDto;
 import com.ecommerce.backend.application.dto.OrderDto;
@@ -54,8 +53,6 @@ class OrderControllerWebMvcTest {
 
     @Test
     void rejectsShortIdempotencyKey() throws Exception {
-        when(currentUserService.requireUserId()).thenReturn(1L);
-
         String body = objectMapper.writeValueAsString(sampleCreateOrderDto());
 
         mockMvc.perform(post("/api/order")
@@ -71,7 +68,7 @@ class OrderControllerWebMvcTest {
         OrderDto dto = new OrderDto();
         dto.setId(99L);
         when(orderService.createOrder(eq(42L), any(), eq("MY-LONG-KEY-001")))
-                .thenReturn(BaseResponseDto.success("Order created successfully", dto));
+                .thenReturn(new OrderService.CreateResult(dto, false));
 
         String body = objectMapper.writeValueAsString(sampleCreateOrderDto());
 

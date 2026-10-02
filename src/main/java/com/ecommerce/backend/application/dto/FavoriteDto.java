@@ -1,19 +1,21 @@
 package com.ecommerce.backend.application.dto;
 
-import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Data
-public class FavoriteDto {
-    private Long id;
-    private Long userId;
-    private Long productId;
-    private String productName;
-    private String productImageUrl;
-    private BigDecimal productPrice;
-    private BigDecimal productDiscount;
-    private String productCategory;
-    private Boolean productInStock;
-    private LocalDateTime createdAt;
+/**
+ * Favori (docs/API_CONTRACT.md §3): {@code productPrice} liste fiyatı, {@code productDiscount}
+ * yüzde indirim.
+ */
+public record FavoriteDto(
+        Long id,
+        Long userId,
+        Long productId,
+        String productName,
+        String productImageUrl,
+        BigDecimal productPrice,
+        Integer productDiscount,
+        String productCategory,
+        Boolean productInStock,
+        LocalDateTime createdAt) {
 }

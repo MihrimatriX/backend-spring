@@ -8,10 +8,13 @@ import com.ecommerce.backend.domain.entity.Category;
 import com.ecommerce.backend.domain.entity.PaymentMethod;
 import com.ecommerce.backend.domain.entity.Product;
 import com.ecommerce.backend.domain.entity.User;
-import com.ecommerce.backend.infrastructure.exception.ConflictException;
+import com.ecommerce.backend.application.exception.ApiException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import java.time.LocalDate;
 import com.ecommerce.backend.infrastructure.repository.AddressRepository;
 import com.ecommerce.backend.infrastructure.repository.CategoryRepository;
 import com.ecommerce.backend.infrastructure.repository.OrderIdempotencyRepository;
+import com.ecommerce.backend.infrastructure.repository.NotificationRepository;
 import com.ecommerce.backend.infrastructure.repository.OrderRepository;
 import com.ecommerce.backend.infrastructure.repository.PaymentMethodRepository;
 import com.ecommerce.backend.infrastructure.repository.ProductRepository;
@@ -41,6 +44,9 @@ class OrderFlowIntegrationTest {
     private OrderService orderService;
     @Autowired
     private OrderRepository orderRepository;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
     @Autowired
     private OrderIdempotencyRepository orderIdempotencyRepository;
     @Autowired
@@ -59,6 +65,7 @@ class OrderFlowIntegrationTest {
     @BeforeEach
     void clean() {
         orderIdempotencyRepository.deleteAll();
+        notificationRepository.deleteAll();
         orderRepository.deleteAll();
         shoppingCartRepository.deleteAll();
         paymentMethodRepository.deleteAll();
@@ -74,8 +81,8 @@ class OrderFlowIntegrationTest {
 
         var response = orderService.createOrder(f.userId(), buildOrderDto(f, 1), null);
 
-        assertThat(response.isSuccess()).isTrue();
-        assertThat(response.getData().getOrderNumber()).startsWith("ORD-");
+        assertThat(response.replay()).isFalse();
+        assertThat(response.order().getOrderNumber()).startsWith("ORD-");
 
         Product updated = productRepository.findById(f.productId()).orElseThrow();
         assertThat(updated.getUnitInStock()).isEqualTo(4);
@@ -89,10 +96,9 @@ class OrderFlowIntegrationTest {
         var first = orderService.createOrder(f.userId(), buildOrderDto(f, 1), key);
         var second = orderService.createOrder(f.userId(), buildOrderDto(f, 1), key);
 
-        assertThat(first.isSuccess()).isTrue();
-        assertThat(second.isSuccess()).isTrue();
-        assertThat(second.getData().getId()).isEqualTo(first.getData().getId());
-        assertThat(second.getMessage()).containsIgnoringCase("Idempotent");
+        assertThat(first.replay()).isFalse();
+        assertThat(second.replay()).isTrue();
+        assertThat(second.order().getId()).isEqualTo(first.order().getId());
 
         Product updated = productRepository.findById(f.productId()).orElseThrow();
         assertThat(updated.getUnitInStock()).isEqualTo(4);
@@ -130,13 +136,16 @@ class OrderFlowIntegrationTest {
             int idx) {
         try {
             start.await();
-            var r = orderService.createOrder(f.userId(), buildOrderDto(f, 1), "parallel-idem-" + idx + "-xxxxxxxx");
-            if (r.isSuccess()) {
-                successes.incrementAndGet();
+            orderService.createOrder(f.userId(), buildOrderDto(f, 1), "parallel-idem-" + idx + "-xxxxxxxx");
+            successes.incrementAndGet();
+        } catch (ApiException e) {
+            // 400 CHECKOUT_FAILED (stok bitti) veya 409 CONFLICT (iyimser kilit)
+            if (e.getStatus().value() == 409) {
+                conflicts.incrementAndGet();
             } else {
                 businessErrors.incrementAndGet();
             }
-        } catch (ConflictException e) {
+        } catch (ObjectOptimisticLockingFailureException e) {
             conflicts.incrementAndGet();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -190,10 +199,9 @@ class OrderFlowIntegrationTest {
         pm.setUserId(u.getId());
         pm.setType("CreditCard");
         pm.setCardHolderName("T U");
-        pm.setCardNumber("4111111111111111");
+        pm.setCardNumber("**** **** **** 1111");
         pm.setExpiryMonth(12);
-        pm.setExpiryYear(2028);
-        pm.setCvv("123");
+        pm.setExpiryYear(LocalDate.now().getYear() + 3);
         pm = paymentMethodRepository.saveAndFlush(pm);
 
         return new CatalogFixture(u.getId(), p.getId(), addr.getId(), pm.getId());
