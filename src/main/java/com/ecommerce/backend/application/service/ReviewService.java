@@ -1,221 +1,125 @@
 package com.ecommerce.backend.application.service;
 
-import com.ecommerce.backend.application.dto.*;
-import com.ecommerce.backend.domain.entity.Product;
+import com.ecommerce.backend.application.dto.CreateReviewDto;
+import com.ecommerce.backend.application.dto.ProductReviewSummaryDto;
+import com.ecommerce.backend.application.dto.ReviewDto;
+import com.ecommerce.backend.application.dto.UpdateReviewDto;
+import com.ecommerce.backend.application.exception.ApiException;
 import com.ecommerce.backend.domain.entity.Review;
-import com.ecommerce.backend.domain.entity.User;
 import com.ecommerce.backend.infrastructure.repository.ProductRepository;
+import com.ecommerce.backend.infrastructure.repository.RatingCountView;
 import com.ecommerce.backend.infrastructure.repository.ReviewRepository;
 import com.ecommerce.backend.infrastructure.repository.UserRepository;
+import com.ecommerce.backend.infrastructure.security.AuthenticatedUser;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
+/**
+ * Ürün yorumları — docs/API_CONTRACT.md §4.11.
+ */
 @Service
 @RequiredArgsConstructor
-@Slf4j
-@Transactional
+@Transactional(readOnly = true)
 public class ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
 
-    @Transactional(readOnly = true)
-    public BaseResponseDto<List<ReviewDto>> getProductReviews(Long productId) {
-        try {
-            log.info("Fetching reviews for product ID: {}", productId);
-
-            List<Review> reviews = reviewRepository.findActiveReviewsByProductId(productId);
-            List<ReviewDto> reviewDtos = reviews.stream()
-                    .map(this::convertToDto)
-                    .collect(Collectors.toList());
-
-            log.info("Found {} reviews for product ID: {}", reviewDtos.size(), productId);
-            return BaseResponseDto.success("Reviews retrieved successfully", reviewDtos);
-        } catch (Exception e) {
-            log.error("Error retrieving reviews for product ID: {}", productId, e);
-            return BaseResponseDto.error("Error retrieving reviews: " + e.getMessage());
-        }
+    public List<ReviewDto> getByProduct(Long productId) {
+        return reviewRepository.findByProductIdAndIsActiveTrueOrderByCreatedAtDescIdDesc(productId).stream()
+                .map(ReviewService::toDto).toList();
     }
 
-    @Transactional(readOnly = true)
-    public BaseResponseDto<ProductReviewSummaryDto> getProductReviewSummary(Long productId) {
-        try {
-            log.info("Fetching review summary for product ID: {}", productId);
-
-            Double averageRating = reviewRepository.findAverageRatingByProductId(productId);
-            Long totalReviews = reviewRepository.countActiveReviewsByProductId(productId);
-
-            Long rating1Count = reviewRepository.countReviewsByProductIdAndRating(productId, 1);
-            Long rating2Count = reviewRepository.countReviewsByProductIdAndRating(productId, 2);
-            Long rating3Count = reviewRepository.countReviewsByProductIdAndRating(productId, 3);
-            Long rating4Count = reviewRepository.countReviewsByProductIdAndRating(productId, 4);
-            Long rating5Count = reviewRepository.countReviewsByProductIdAndRating(productId, 5);
-
-            ProductReviewSummaryDto summary = new ProductReviewSummaryDto(
-                    productId,
-                    averageRating != null ? averageRating : 0.0,
-                    totalReviews != null ? totalReviews : 0L,
-                    rating1Count != null ? rating1Count : 0L,
-                    rating2Count != null ? rating2Count : 0L,
-                    rating3Count != null ? rating3Count : 0L,
-                    rating4Count != null ? rating4Count : 0L,
-                    rating5Count != null ? rating5Count : 0L);
-
-            log.info("Review summary for product ID {}: {} reviews, {} average rating",
-                    productId, totalReviews, averageRating);
-            return BaseResponseDto.success("Review summary retrieved successfully", summary);
-        } catch (Exception e) {
-            log.error("Error retrieving review summary for product ID: {}", productId, e);
-            return BaseResponseDto.error("Error retrieving review summary: " + e.getMessage());
-        }
+    public List<ReviewDto> getAllForAdmin(int pageNumber, int pageSize) {
+        var page = PageRequest.of(pageNumber - 1, pageSize, Sort.by(Sort.Direction.DESC, "createdAt", "id"));
+        return reviewRepository.findByIsActiveTrue(page).stream().map(ReviewService::toDto).toList();
     }
 
-    @Transactional(readOnly = true)
-    public BaseResponseDto<ReviewDto> getReviewById(Long reviewId) {
-        try {
-            log.info("Fetching review with ID: {}", reviewId);
-
-            Review review = reviewRepository.findById(reviewId)
-                    .orElseThrow(() -> new RuntimeException("Review not found with ID: " + reviewId));
-
-            if (!review.getIsActive()) {
-                throw new RuntimeException("Review not found with ID: " + reviewId);
-            }
-
-            ReviewDto reviewDto = convertToDto(review);
-            log.info("Review found with ID: {}", reviewId);
-            return BaseResponseDto.success("Review retrieved successfully", reviewDto);
-        } catch (Exception e) {
-            log.error("Error retrieving review with ID: {}", reviewId, e);
-            return BaseResponseDto.error("Error retrieving review: " + e.getMessage());
-        }
+    public ReviewDto getById(Long id) {
+        return reviewRepository.findWithDetailsByIdAndIsActiveTrue(id).map(ReviewService::toDto)
+                .orElseThrow(ReviewService::notFound);
     }
 
-    public BaseResponseDto<ReviewDto> createReview(CreateReviewDto createReviewDto) {
-        try {
-            log.info("Creating review for product ID: {} by user ID: {}",
-                    createReviewDto.getProductId(), createReviewDto.getUserId());
-
-            // Check if product exists
-            Product product = productRepository.findById(createReviewDto.getProductId())
-                    .orElseThrow(
-                            () -> new RuntimeException("Product not found with ID: " + createReviewDto.getProductId()));
-
-            // Check if user exists
-            User user = userRepository.findById(createReviewDto.getUserId())
-                    .orElseThrow(() -> new RuntimeException("User not found with ID: " + createReviewDto.getUserId()));
-
-            // Check if user already reviewed this product
-            if (reviewRepository.existsByUserIdAndProductIdAndIsActiveTrue(
-                    createReviewDto.getUserId(), createReviewDto.getProductId())) {
-                throw new RuntimeException("User has already reviewed this product");
+    public ProductReviewSummaryDto getSummary(Long productId) {
+        long[] counts = new long[6];
+        for (RatingCountView row : reviewRepository.countByRating(productId)) {
+            if (row.getRating() != null && row.getRating() >= 1 && row.getRating() <= 5) {
+                counts[row.getRating()] = row.getReviewCount();
             }
-
-            Review review = new Review();
-            review.setRating(createReviewDto.getRating());
-            review.setTitle(createReviewDto.getTitle());
-            review.setComment(createReviewDto.getComment());
-            review.setUserId(createReviewDto.getUserId());
-            review.setProductId(createReviewDto.getProductId());
-            review.setIsVerified(false);
-            review.setIsHelpful(false);
-            review.setIsActive(true);
-
-            Review savedReview = reviewRepository.save(review);
-            ReviewDto reviewDto = convertToDto(savedReview);
-
-            log.info("Review created successfully with ID: {}", savedReview.getId());
-            return BaseResponseDto.success("Review created successfully", reviewDto);
-        } catch (Exception e) {
-            log.error("Error creating review", e);
-            return BaseResponseDto.error("Error creating review: " + e.getMessage());
         }
+        long total = counts[1] + counts[2] + counts[3] + counts[4] + counts[5];
+        long sum = counts[1] + 2 * counts[2] + 3 * counts[3] + 4 * counts[4] + 5 * counts[5];
+        return new ProductReviewSummaryDto(productId, RatingMath.average(sum, total), total, counts[1], counts[2],
+                counts[3], counts[4], counts[5]);
     }
 
-    public BaseResponseDto<ReviewDto> updateReview(Long reviewId, UpdateReviewDto updateReviewDto) {
-        try {
-            log.info("Updating review with ID: {}", reviewId);
-
-            Review review = reviewRepository.findById(reviewId)
-                    .orElseThrow(() -> new RuntimeException("Review not found with ID: " + reviewId));
-
-            if (!review.getIsActive()) {
-                throw new RuntimeException("Review not found with ID: " + reviewId);
-            }
-
-            if (updateReviewDto.getRating() != null) {
-                review.setRating(updateReviewDto.getRating());
-            }
-            if (updateReviewDto.getTitle() != null) {
-                review.setTitle(updateReviewDto.getTitle());
-            }
-            if (updateReviewDto.getComment() != null) {
-                review.setComment(updateReviewDto.getComment());
-            }
-
-            Review updatedReview = reviewRepository.save(review);
-            ReviewDto reviewDto = convertToDto(updatedReview);
-
-            log.info("Review updated successfully with ID: {}", reviewId);
-            return BaseResponseDto.success("Review updated successfully", reviewDto);
-        } catch (Exception e) {
-            log.error("Error updating review with ID: {}", reviewId, e);
-            return BaseResponseDto.error("Error updating review: " + e.getMessage());
+    @Transactional
+    public ReviewDto create(Long userId, CreateReviewDto request) {
+        if (productRepository.findById(request.productId()).filter(p -> Boolean.TRUE.equals(p.getIsActive()))
+                .isEmpty()) {
+            throw ApiException.badRequest("PRODUCT_NOT_FOUND", "Product not found");
         }
+        if (reviewRepository.existsByUserIdAndProductIdAndIsActiveTrue(userId, request.productId())) {
+            throw ApiException.badRequest("REVIEW_EXISTS",
+                    "You have already reviewed this product. Edit or remove your existing review.");
+        }
+        Review review = new Review();
+        review.setUserId(userId);
+        review.setProductId(request.productId());
+        review.setRating(request.rating());
+        review.setTitle(request.title());
+        review.setComment(request.comment());
+        review.setIsVerified(reviewRepository.countPurchases(userId, request.productId()) > 0);
+        review.setIsHelpful(false);
+        review.setIsActive(true);
+        Review saved = reviewRepository.saveAndFlush(review);
+        return reviewRepository.findWithDetailsByIdAndIsActiveTrue(saved.getId()).map(ReviewService::toDto)
+                .orElseThrow(ReviewService::notFound);
     }
 
-    public BaseResponseDto<String> deleteReview(Long reviewId) {
-        try {
-            log.info("Deleting review with ID: {}", reviewId);
-
-            Review review = reviewRepository.findById(reviewId)
-                    .orElseThrow(() -> new RuntimeException("Review not found with ID: " + reviewId));
-
-            if (!review.getIsActive()) {
-                throw new RuntimeException("Review not found with ID: " + reviewId);
-            }
-
-            // Soft delete
-            review.setIsActive(false);
-            reviewRepository.save(review);
-
-            log.info("Review deleted successfully with ID: {}", reviewId);
-            return BaseResponseDto.success("Review deleted successfully");
-        } catch (Exception e) {
-            log.error("Error deleting review with ID: {}", reviewId, e);
-            return BaseResponseDto.error("Error deleting review: " + e.getMessage());
+    @Transactional
+    public ReviewDto update(AuthenticatedUser actor, Long id, UpdateReviewDto request) {
+        Review review = reviewRepository.findWithDetailsByIdAndIsActiveTrue(id).orElseThrow(ReviewService::notFound);
+        if (!actor.isAdmin() && !review.getUserId().equals(actor.id())) {
+            throw ApiException.forbidden("You can only edit your own reviews");
         }
+        if (request.rating() != null) {
+            review.setRating(request.rating());
+        }
+        if (request.title() != null) {
+            review.setTitle(request.title());
+        }
+        if (request.comment() != null) {
+            review.setComment(request.comment());
+        }
+        return toDto(reviewRepository.save(review));
     }
 
-    private ReviewDto convertToDto(Review review) {
-        ReviewDto dto = new ReviewDto();
-        dto.setId(review.getId());
-        dto.setRating(review.getRating());
-        dto.setTitle(review.getTitle());
-        dto.setComment(review.getComment());
-        dto.setIsVerified(review.getIsVerified());
-        dto.setIsHelpful(review.getIsHelpful());
-        dto.setUserId(review.getUserId());
-        dto.setProductId(review.getProductId());
-        dto.setCreatedAt(review.getCreatedAt());
-        dto.setUpdatedAt(review.getUpdatedAt());
-
-        // Set user name if user is loaded
-        if (review.getUser() != null) {
-            dto.setUserName(review.getUser().getFirstName() + " " + review.getUser().getLastName());
+    @Transactional
+    public void delete(AuthenticatedUser actor, Long id) {
+        Review review = reviewRepository.findWithDetailsByIdAndIsActiveTrue(id).orElseThrow(ReviewService::notFound);
+        if (!actor.isAdmin() && !review.getUserId().equals(actor.id())) {
+            throw ApiException.forbidden("You can only delete your own reviews");
         }
+        review.setIsActive(false);
+        reviewRepository.save(review);
+    }
 
-        // Set product name if product is loaded
-        if (review.getProduct() != null) {
-            dto.setProductName(review.getProduct().getProductName());
-        }
+    private static ApiException notFound() {
+        return ApiException.notFound("REVIEW_NOT_FOUND", "Review not found");
+    }
 
-        return dto;
+    private static ReviewDto toDto(Review r) {
+        String userName = r.getUser() == null ? null
+                : (r.getUser().getFirstName() + " " + r.getUser().getLastName()).trim();
+        String productName = r.getProduct() == null ? null : r.getProduct().getProductName();
+        return new ReviewDto(r.getId(), r.getUserId(), r.getProductId(), r.getRating(), r.getTitle(), r.getComment(),
+                r.getIsVerified(), r.getIsHelpful(), userName, productName, r.getCreatedAt(), r.getUpdatedAt());
     }
 }

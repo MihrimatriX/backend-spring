@@ -42,6 +42,11 @@ public class Product extends BaseEntity {
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
+    /** İsteğe bağlı alt kategori; ürünün kategorisine ait olmalıdır. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sub_category_id")
+    private SubCategory subCategory;
+
     @Size(max = 1000, message = "Description cannot exceed 1000 characters")
     @Column(name = "description", length = 1000)
     private String description;
@@ -110,6 +115,14 @@ public class Product extends BaseEntity {
 
     public void setCategory(Category category) {
         this.category = category;
+    }
+
+    public SubCategory getSubCategory() {
+        return subCategory;
+    }
+
+    public void setSubCategory(SubCategory subCategory) {
+        this.subCategory = subCategory;
     }
 
     public String getDescription() {

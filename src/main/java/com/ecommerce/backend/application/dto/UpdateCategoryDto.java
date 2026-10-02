@@ -2,22 +2,18 @@ package com.ecommerce.backend.application.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class UpdateCategoryDto {
+/** {@code PUT /api/category/{id}}; {@code isActive} gönderilmezse (null) değişmez. */
+public record UpdateCategoryDto(
+        @NotBlank(message = "Category name is required")
+        @Size(max = 100, message = "Category name cannot exceed 100 characters")
+        String categoryName,
 
-    @NotBlank(message = "Category name is required")
-    @Size(min = 2, max = 100, message = "Category name must be between 2 and 100 characters")
-    private String categoryName;
+        @Size(max = 500, message = "Description cannot exceed 500 characters")
+        String description,
 
-    @Size(max = 500, message = "Description must not exceed 500 characters")
-    private String description;
+        @Size(max = 255, message = "Image URL cannot exceed 255 characters")
+        String imageUrl,
 
-    @Size(max = 255, message = "Image URL must not exceed 255 characters")
-    private String imageUrl;
+        Boolean isActive) {
 }

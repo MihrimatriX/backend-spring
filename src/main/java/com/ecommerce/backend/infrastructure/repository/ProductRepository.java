@@ -1,54 +1,63 @@
 package com.ecommerce.backend.infrastructure.repository;
 
 import com.ecommerce.backend.domain.entity.Product;
+import com.ecommerce.backend.domain.entity.SubCategory;
+import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
+/**
+ * Ürün sorguları. Liste sorguları kategori ve alt kategoriyi aynı sorguda getirir (N+1 yok);
+ * filtreler {@link ProductSpecifications} ile kurulur.
+ */
 @Repository
-public interface ProductRepository extends JpaRepository<Product, Long> {
+public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
 
-       List<Product> findByIsActiveTrue();
+    @Override
+    @EntityGraph(attributePaths = { "category", "subCategory" })
+    Page<Product> findAll(Specification<Product> spec, Pageable pageable);
 
-       List<Product> findByCategoryIdAndIsActiveTrue(Long categoryId);
+    @Override
+    @EntityGraph(attributePaths = { "category", "subCategory" })
+    List<Product> findAll(Specification<Product> spec, Sort sort);
 
-       @Query("SELECT p FROM Product p WHERE p.isActive = true AND " +
-                     "(:categoryId IS NULL OR p.category.id = :categoryId) AND " +
-                     "(:minPrice IS NULL OR p.unitPrice >= :minPrice) AND " +
-                     "(:maxPrice IS NULL OR p.unitPrice <= :maxPrice)")
-       Page<Product> findWithFiltersWithoutSearch(@Param("categoryId") Long categoryId,
-                     @Param("minPrice") BigDecimal minPrice,
-                     @Param("maxPrice") BigDecimal maxPrice,
-                     Pageable pageable);
+    @EntityGraph(attributePaths = { "category", "subCategory" })
+    Optional<Product> findWithCatalogById(Long id);
 
-       @Query("SELECT p FROM Product p WHERE p.isActive = true AND " +
-                     "(:categoryId IS NULL OR p.category.id = :categoryId) AND " +
-                     "(:minPrice IS NULL OR p.unitPrice >= :minPrice) AND " +
-                     "(:maxPrice IS NULL OR p.unitPrice <= :maxPrice) AND " +
-                     "(LOWER(p.productName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
-                     "LOWER(p.description) LIKE LOWER(CONCAT('%', :searchTerm, '%')))")
-       Page<Product> findWithFiltersWithSearch(@Param("categoryId") Long categoryId,
-                     @Param("minPrice") BigDecimal minPrice,
-                     @Param("maxPrice") BigDecimal maxPrice,
-                     @Param("searchTerm") String searchTerm,
-                     Pageable pageable);
+    @EntityGraph(attributePaths = { "category", "subCategory" })
+    Optional<Product> findWithCatalogByIdAndIsActiveTrue(Long id);
 
-       @Query("SELECT p FROM Product p WHERE p.isActive = true AND p.discount > 20")
-       List<Product> findFeaturedProducts();
+    /** Öne çıkanlar: indirim > %20 veya {@code since} sonrasında eklenmiş; en yeni önce. */
+    @EntityGraph(attributePaths = { "category", "subCategory" })
+    @Query("SELECT p FROM Product p WHERE p.isActive = true AND (p.discount > 20 OR p.createdAt >= :since) "
+            + "ORDER BY p.createdAt DESC, p.id DESC")
+    List<Product> findFeatured(@Param("since") LocalDateTime since, Limit limit);
 
-       @Query("SELECT p FROM Product p WHERE p.isActive = true AND p.discount > 0")
-       List<Product> findDiscountedProducts();
+    /** İndirimli ürünler: indirim oranı yüksek olan önce. */
+    @EntityGraph(attributePaths = { "category", "subCategory" })
+    @Query("SELECT p FROM Product p WHERE p.isActive = true AND p.discount > 0 ORDER BY p.discount DESC, p.id ASC")
+    List<Product> findDiscounted(Limit limit);
 
-       @Query("SELECT p FROM Product p WHERE p.isActive = true AND " +
-                     "(LOWER(p.productName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
-                     "LOWER(p.description) LIKE LOWER(CONCAT('%', :searchTerm, '%')))")
-       List<Product> searchProducts(@Param("searchTerm") String searchTerm);
+    /** Alt kategori atanmamış ürünler (alt kategori tohumlaması için): [id, productName]. */
+    @Query("SELECT p.id, p.productName FROM Product p WHERE p.category.id = :categoryId AND p.subCategory IS NULL "
+            + "ORDER BY p.id")
+    List<Object[]> findUnassignedNames(@Param("categoryId") Long categoryId);
 
-       boolean existsByProductNameAndIsActiveTrue(String productName);
+    @Modifying
+    @Query("UPDATE Product p SET p.subCategory = :subCategory WHERE p.id IN :ids")
+    int assignSubCategory(@Param("subCategory") SubCategory subCategory, @Param("ids") Collection<Long> ids);
 }

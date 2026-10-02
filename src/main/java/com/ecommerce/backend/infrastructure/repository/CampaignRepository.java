@@ -8,24 +8,17 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface CampaignRepository extends JpaRepository<Campaign, Long> {
 
-       List<Campaign> findByIsActiveTrue();
+    List<Campaign> findByIsActiveTrueOrderByCreatedAtDescIdDesc();
 
-       List<Campaign> findByIsActiveTrueOrderByCreatedAtDesc();
+    /** Aktif ve {@code startDate ≤ now ≤ endDate}; en yeni önce. */
+    @Query("SELECT c FROM Campaign c WHERE c.isActive = true AND c.startDate <= :now AND c.endDate >= :now "
+            + "ORDER BY c.createdAt DESC, c.id DESC")
+    List<Campaign> findRunning(@Param("now") LocalDateTime now);
 
-       List<Campaign> findByIsActiveTrueAndStartDateLessThanEqualAndEndDateGreaterThanEqualOrderByCreatedAtDesc(
-                     LocalDateTime startDate, LocalDateTime endDate);
-
-       java.util.Optional<Campaign> findByIdAndIsActiveTrue(Long id);
-
-       @Query("SELECT c FROM Campaign c WHERE c.isActive = true AND " +
-                     "c.startDate <= :now AND c.endDate >= :now")
-       List<Campaign> findActiveCampaigns(@Param("now") LocalDateTime now);
-
-       @Query("SELECT c FROM Campaign c WHERE c.isActive = true AND " +
-                     "c.startDate <= CURRENT_TIMESTAMP AND c.endDate >= CURRENT_TIMESTAMP")
-       List<Campaign> findCurrentActiveCampaigns();
+    Optional<Campaign> findByIdAndIsActiveTrue(Long id);
 }
