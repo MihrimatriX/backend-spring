@@ -42,7 +42,7 @@ public class JwtService {
                 .claim("role", role)
                 .id(UUID.randomUUID().toString())
                 .issuer(properties.getIssuer())
-                .audience().add(properties.getAudience()).and()
+                .audience().single(properties.getAudience())
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plusMillis(properties.getExpiration())))
                 .signWith(key, Jwts.SIG.HS256)
