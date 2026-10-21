@@ -1,0 +1,7022 @@
+{
+ "openapi": "3.1.0",
+ "info": {
+  "title": "E-Commerce API",
+  "description": "E-ticaret REST API (Spring Boot). Sözleşme backend-dotnet ile birebir aynıdır: docs/API_CONTRACT.md",
+  "contact": {
+   "name": "AFU",
+   "email": "afu@example.com"
+  },
+  "version": "v1.0.0"
+ },
+ "servers": [
+  {
+   "url": "http://127.0.0.1:8081",
+   "description": "Yerel geliştirme sunucusu"
+  }
+ ],
+ "security": [
+  {
+   "Bearer": []
+  }
+ ],
+ "tags": [
+  {
+   "name": "Campaigns",
+   "description": "Campaign management operations"
+  },
+  {
+   "name": "Categories",
+   "description": "Category management operations"
+  },
+  {
+   "name": "Orders",
+   "description": "Order placement and tracking"
+  },
+  {
+   "name": "Payment Method Management",
+   "description": "APIs for managing user payment methods"
+  },
+  {
+   "name": "Review Management",
+   "description": "APIs for managing product reviews"
+  },
+  {
+   "name": "Notification",
+   "description": "Kullanıcı bildirimleri"
+  },
+  {
+   "name": "Address Management",
+   "description": "APIs for managing user addresses"
+  },
+  {
+   "name": "SubCategories",
+   "description": "SubCategory management operations"
+  },
+  {
+   "name": "Products",
+   "description": "Product management operations"
+  },
+  {
+   "name": "Settings",
+   "description": "Kullanıcı ve gizlilik ayarları"
+  },
+  {
+   "name": "Help & Support",
+   "description": "Yardım makaleleri, SSS, iletişim ve destek talepleri"
+  },
+  {
+   "name": "Auth",
+   "description": "Kayıt, giriş, çıkış"
+  },
+  {
+   "name": "Security",
+   "description": "Şifre, e-posta, giriş geçmişi, oturum iptali"
+  }
+ ],
+ "paths": {
+  "/api/subcategory/{id}": {
+   "get": {
+    "tags": [
+     "SubCategories"
+    ],
+    "summary": "Get subcategory by ID",
+    "operationId": "getSubCategory",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoSubCategoryDto"
+        }
+       }
+      }
+     }
+    }
+   },
+   "put": {
+    "tags": [
+     "SubCategories"
+    ],
+    "summary": "Update subcategory",
+    "operationId": "updateSubCategory",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/UpdateSubCategoryDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoSubCategoryDto"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "tags": [
+     "SubCategories"
+    ],
+    "summary": "Delete subcategory (soft)",
+    "operationId": "deleteSubCategory",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoBoolean"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/settings/user": {
+   "get": {
+    "tags": [
+     "Settings"
+    ],
+    "summary": "Kullanıcı ayarları (yoksa varsayılanlarla oluşturulur)",
+    "operationId": "getUserSettings",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoUserSettingsDto"
+        }
+       }
+      }
+     }
+    }
+   },
+   "put": {
+    "tags": [
+     "Settings"
+    ],
+    "summary": "Kullanıcı ayarlarını kısmi güncelle",
+    "operationId": "updateUserSettings",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/UpdateUserSettingsDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoUserSettingsDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/settings/privacy": {
+   "get": {
+    "tags": [
+     "Settings"
+    ],
+    "summary": "Gizlilik ayarları (yoksa varsayılanlarla oluşturulur)",
+    "operationId": "getPrivacySettings",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoPrivacySettingsDto"
+        }
+       }
+      }
+     }
+    }
+   },
+   "put": {
+    "tags": [
+     "Settings"
+    ],
+    "summary": "Gizlilik ayarlarını kısmi güncelle",
+    "operationId": "updatePrivacySettings",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/UpdatePrivacySettingsDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoPrivacySettingsDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/security/settings": {
+   "get": {
+    "tags": [
+     "Security"
+    ],
+    "summary": "Güvenlik ayarları",
+    "operationId": "getSecuritySettings",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoSecuritySettingsDto"
+        }
+       }
+      }
+     }
+    }
+   },
+   "put": {
+    "tags": [
+     "Security"
+    ],
+    "summary": "Güvenlik ayarlarını kaydet",
+    "operationId": "updateSecuritySettings",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SecuritySettingsDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoSecuritySettingsDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/review/{id}": {
+   "get": {
+    "tags": [
+     "Review Management"
+    ],
+    "summary": "Get review by ID",
+    "operationId": "getReview",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoReviewDto"
+        }
+       }
+      }
+     }
+    }
+   },
+   "put": {
+    "tags": [
+     "Review Management"
+    ],
+    "summary": "Update review (owner or admin)",
+    "operationId": "updateReview",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/UpdateReviewDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoReviewDto"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "tags": [
+     "Review Management"
+    ],
+    "summary": "Delete review (owner or admin, soft)",
+    "operationId": "deleteReview",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoString"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/product/{id}": {
+   "get": {
+    "tags": [
+     "Products"
+    ],
+    "summary": "Get product by ID",
+    "operationId": "getProduct",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoProductDto"
+        }
+       }
+      }
+     }
+    }
+   },
+   "put": {
+    "tags": [
+     "Products"
+    ],
+    "summary": "Update product",
+    "operationId": "updateProduct",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ProductRequestDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoProductDto"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "tags": [
+     "Products"
+    ],
+    "summary": "Delete product (soft)",
+    "operationId": "deleteProduct",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoString"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/paymentmethod/{paymentMethodId}": {
+   "get": {
+    "tags": [
+     "Payment Method Management"
+    ],
+    "summary": "Get payment method by ID",
+    "operationId": "getPaymentMethod",
+    "parameters": [
+     {
+      "name": "paymentMethodId",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoPaymentMethodDto"
+        }
+       }
+      }
+     }
+    }
+   },
+   "put": {
+    "tags": [
+     "Payment Method Management"
+    ],
+    "summary": "Update payment method",
+    "operationId": "updatePaymentMethod",
+    "parameters": [
+     {
+      "name": "paymentMethodId",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/UpdatePaymentMethodDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoPaymentMethodDto"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "tags": [
+     "Payment Method Management"
+    ],
+    "summary": "Delete payment method (soft)",
+    "operationId": "deletePaymentMethod",
+    "parameters": [
+     {
+      "name": "paymentMethodId",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoString"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/paymentmethod/{paymentMethodId}/default": {
+   "put": {
+    "tags": [
+     "Payment Method Management"
+    ],
+    "summary": "Set default payment method",
+    "operationId": "setDefaultPaymentMethod",
+    "parameters": [
+     {
+      "name": "paymentMethodId",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoPaymentMethodDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/order/{id}/status": {
+   "put": {
+    "tags": [
+     "Orders"
+    ],
+    "summary": "Admin: update order status",
+    "operationId": "updateOrderStatus",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/UpdateOrderStatusDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoOrderDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/order/{id}/cancel": {
+   "put": {
+    "tags": [
+     "Orders"
+    ],
+    "summary": "Cancel my order",
+    "description": "Only Pending/Processing; stock is restored",
+    "operationId": "cancelOrder",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CancelOrderRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoString"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/notification/{notificationId}": {
+   "get": {
+    "tags": [
+     "Notification"
+    ],
+    "summary": "Bildirim ayrıntısı; yoksa 404 NOTIFICATION_NOT_FOUND",
+    "operationId": "getNotification",
+    "parameters": [
+     {
+      "name": "notificationId",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoNotificationDto"
+        }
+       }
+      }
+     }
+    }
+   },
+   "put": {
+    "tags": [
+     "Notification"
+    ],
+    "summary": "Okundu / okunmadı yap",
+    "operationId": "updateNotification",
+    "parameters": [
+     {
+      "name": "notificationId",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/UpdateNotificationDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoNotificationDto"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "tags": [
+     "Notification"
+    ],
+    "summary": "Bildirimi sil (yumuşak)",
+    "operationId": "deleteNotification",
+    "parameters": [
+     {
+      "name": "notificationId",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoString"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/notification/mark-all-read": {
+   "put": {
+    "tags": [
+     "Notification"
+    ],
+    "summary": "Tüm bildirimleri okundu yap",
+    "operationId": "markAllAsRead",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoString"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/category/{id}": {
+   "get": {
+    "tags": [
+     "Categories"
+    ],
+    "summary": "Get category by ID",
+    "operationId": "getCategory",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoCategoryDto"
+        }
+       }
+      }
+     }
+    }
+   },
+   "put": {
+    "tags": [
+     "Categories"
+    ],
+    "summary": "Update category",
+    "operationId": "updateCategory",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/UpdateCategoryDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoCategoryDto"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "tags": [
+     "Categories"
+    ],
+    "summary": "Delete category (soft)",
+    "operationId": "deleteCategory",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoString"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/cart/update": {
+   "put": {
+    "tags": [
+     "cart-controller"
+    ],
+    "operationId": "updateCartItem",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/UpdateCartItemDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoCartDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/campaign/{id}": {
+   "get": {
+    "tags": [
+     "Campaigns"
+    ],
+    "summary": "Get campaign by ID",
+    "operationId": "getCampaign",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoCampaignDto"
+        }
+       }
+      }
+     }
+    }
+   },
+   "put": {
+    "tags": [
+     "Campaigns"
+    ],
+    "summary": "Update campaign",
+    "operationId": "updateCampaign",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CampaignRequestDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoCampaignDto"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "tags": [
+     "Campaigns"
+    ],
+    "summary": "Delete campaign (soft)",
+    "operationId": "deleteCampaign",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoString"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/address/{addressId}": {
+   "get": {
+    "tags": [
+     "Address Management"
+    ],
+    "summary": "Get address by ID",
+    "operationId": "getAddress",
+    "parameters": [
+     {
+      "name": "addressId",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoAddressDto"
+        }
+       }
+      }
+     }
+    }
+   },
+   "put": {
+    "tags": [
+     "Address Management"
+    ],
+    "summary": "Update address",
+    "operationId": "updateAddress",
+    "parameters": [
+     {
+      "name": "addressId",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/UpdateAddressDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoAddressDto"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "tags": [
+     "Address Management"
+    ],
+    "summary": "Delete address (soft)",
+    "operationId": "deleteAddress",
+    "parameters": [
+     {
+      "name": "addressId",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoString"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/address/{addressId}/default": {
+   "put": {
+    "tags": [
+     "Address Management"
+    ],
+    "summary": "Set default address",
+    "operationId": "setDefaultAddress",
+    "parameters": [
+     {
+      "name": "addressId",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoAddressDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/subcategory": {
+   "get": {
+    "tags": [
+     "SubCategories"
+    ],
+    "summary": "Get all subcategories",
+    "description": "Active subcategories, by category then name",
+    "operationId": "getAllSubCategories",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoListSubCategoryDto"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "SubCategories"
+    ],
+    "summary": "Create subcategory",
+    "operationId": "createSubCategory",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CreateSubCategoryDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoSubCategoryDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/settings/reset": {
+   "post": {
+    "tags": [
+     "Settings"
+    ],
+    "summary": "Kullanıcı ve gizlilik ayarlarını varsayılana döndür",
+    "operationId": "resetToDefaults",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoString"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/settings/import": {
+   "post": {
+    "tags": [
+     "Settings"
+    ],
+    "summary": "Export metnini (JSON string) veya aynı nesneyi içe aktar; geçersizse 400 INVALID_IMPORT",
+    "operationId": "importSettings",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/JsonNode"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoString"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/security/update-email": {
+   "post": {
+    "tags": [
+     "Security"
+    ],
+    "summary": "E-posta değiştir; kullanımdaysa 400 EMAIL_TAKEN",
+    "operationId": "updateEmail",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/UpdateEmailDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoString"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/security/logout-all-devices": {
+   "post": {
+    "tags": [
+     "Security"
+    ],
+    "summary": "Çağıran token hariç tüm oturumları kapat",
+    "operationId": "logoutAllDevices",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoString"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/security/enable-2fa": {
+   "post": {
+    "tags": [
+     "Security"
+    ],
+    "summary": "Taslak: şifreyi doğrular (2FA henüz uygulanmadı)",
+    "operationId": "enableTwoFactor",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/EnableTwoFactorDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoString"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/security/disable-2fa": {
+   "post": {
+    "tags": [
+     "Security"
+    ],
+    "summary": "Taslak: şifreyi doğrular (2FA henüz uygulanmadı)",
+    "operationId": "disableTwoFactor",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DisableTwoFactorDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoString"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/security/change-password": {
+   "post": {
+    "tags": [
+     "Security"
+    ],
+    "summary": "Şifre değiştir; mevcut şifre hatalıysa 400 INVALID_PASSWORD",
+    "operationId": "changePassword",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ChangePasswordDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoString"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/review": {
+   "post": {
+    "tags": [
+     "Review Management"
+    ],
+    "summary": "Create review",
+    "description": "Author is taken from the token",
+    "operationId": "createReview",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CreateReviewDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoReviewDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/product": {
+   "get": {
+    "tags": [
+     "Products"
+    ],
+    "summary": "Get products",
+    "description": "Paged, filterable list of active products",
+    "operationId": "getProducts",
+    "parameters": [
+     {
+      "name": "categoryId",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     },
+     {
+      "name": "subCategoryId",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     },
+     {
+      "name": "minPrice",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "number"
+      }
+     },
+     {
+      "name": "maxPrice",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "number"
+      }
+     },
+     {
+      "name": "searchTerm",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "sortBy",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "string",
+       "default": "Id"
+      }
+     },
+     {
+      "name": "sortOrder",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "string",
+       "default": "asc"
+      }
+     },
+     {
+      "name": "pageNumber",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     },
+     {
+      "name": "pageSize",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoPagedResultDtoProductDto"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "Products"
+    ],
+    "summary": "Create product",
+    "operationId": "createProduct",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ProductRequestDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoProductDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/paymentmethod": {
+   "post": {
+    "tags": [
+     "Payment Method Management"
+    ],
+    "summary": "Create payment method",
+    "operationId": "createPaymentMethod",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CreatePaymentMethodDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoPaymentMethodDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/order": {
+   "get": {
+    "tags": [
+     "Orders"
+    ],
+    "summary": "Get my orders",
+    "description": "Newest first",
+    "operationId": "getUserOrders",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoListOrderDto"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "Orders"
+    ],
+    "summary": "Place order",
+    "description": "Optional Idempotency-Key header (8-128 chars)",
+    "operationId": "createOrder",
+    "parameters": [
+     {
+      "name": "Idempotency-Key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CreateOrderDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoOrderDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/order/{id}/return-request": {
+   "post": {
+    "tags": [
+     "Orders"
+    ],
+    "summary": "Request a return",
+    "description": "Only Delivered orders",
+    "operationId": "requestReturn",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ReturnRequestDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoOrderDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/order/{id}/demo/advance-fulfillment": {
+   "post": {
+    "tags": [
+     "Orders"
+    ],
+    "summary": "Demo: advance fulfillment",
+    "description": "Pending → Processing → Shipped → Delivered",
+    "operationId": "advanceDemoFulfillment",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoOrderDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/notification": {
+   "post": {
+    "tags": [
+     "Notification"
+    ],
+    "summary": "Yönetici: kullanıcıya bildirim gönder (201); kullanıcı yoksa 400 USER_NOT_FOUND",
+    "operationId": "createNotification",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CreateNotificationDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoNotificationDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/helpsupport/tickets": {
+   "get": {
+    "tags": [
+     "Help & Support"
+    ],
+    "summary": "Çağıranın destek talepleri",
+    "operationId": "getUserTickets",
+    "parameters": [
+     {
+      "name": "pageNumber",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     },
+     {
+      "name": "pageSize",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoListSupportTicketDto"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "Help & Support"
+    ],
+    "summary": "Destek talebi oluştur (201, status Open)",
+    "operationId": "createTicket",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CreateSupportTicketDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoSupportTicketDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/helpsupport/contact": {
+   "post": {
+    "tags": [
+     "Help & Support"
+    ],
+    "summary": "İletişim formu (anonim)",
+    "operationId": "submitContactForm",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ContactFormDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoString"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/helpsupport/articles": {
+   "get": {
+    "tags": [
+     "Help & Support"
+    ],
+    "summary": "Yayımlanmış yardım makaleleri (en yeni önce)",
+    "operationId": "getArticles",
+    "parameters": [
+     {
+      "name": "category",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "pageNumber",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     },
+     {
+      "name": "pageSize",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoListHelpArticleDto"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "Help & Support"
+    ],
+    "summary": "Yönetici: makale oluştur (201)",
+    "operationId": "createArticle",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CreateHelpArticleDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoHelpArticleDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/favorite/add": {
+   "post": {
+    "tags": [
+     "favorite-controller"
+    ],
+    "operationId": "addToFavorites",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/AddToFavoritesDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoFavoriteDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/category": {
+   "get": {
+    "tags": [
+     "Categories"
+    ],
+    "summary": "Get all categories",
+    "description": "Active categories, ordered by name",
+    "operationId": "getAllCategories",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoListCategoryDto"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "Categories"
+    ],
+    "summary": "Create category",
+    "operationId": "createCategory",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CreateCategoryDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoCategoryDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/cart/add": {
+   "post": {
+    "tags": [
+     "cart-controller"
+    ],
+    "operationId": "addToCart",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/AddToCartDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoCartDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/campaign": {
+   "get": {
+    "tags": [
+     "Campaigns"
+    ],
+    "summary": "Get all campaigns",
+    "description": "Active campaigns, newest first",
+    "operationId": "getAllCampaigns",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoListCampaignDto"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "Campaigns"
+    ],
+    "summary": "Create campaign",
+    "operationId": "createCampaign",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CampaignRequestDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoCampaignDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/auth/register": {
+   "post": {
+    "tags": [
+     "Auth"
+    ],
+    "summary": "Yeni kullanıcı kaydı (201)",
+    "operationId": "register",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RegisterRequestDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoAuthResponseDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/auth/logout": {
+   "post": {
+    "tags": [
+     "Auth"
+    ],
+    "summary": "Çıkış (JWT durumsuz; istemci token'ı siler)",
+    "operationId": "logout",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoString"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/auth/login": {
+   "post": {
+    "tags": [
+     "Auth"
+    ],
+    "summary": "Giriş; hatalı bilgide 401 INVALID_CREDENTIALS",
+    "operationId": "login",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/LoginRequestDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoAuthResponseDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/address": {
+   "post": {
+    "tags": [
+     "Address Management"
+    ],
+    "summary": "Create address",
+    "operationId": "createAddress",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CreateAddressDto"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoAddressDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/health": {
+   "get": {
+    "tags": [
+     "web-navigation-controller"
+    ],
+    "operationId": "health",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/test/ping": {
+   "get": {
+    "tags": [
+     "test-controller"
+    ],
+    "operationId": "ping",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": {
+          "type": "object"
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/test/info": {
+   "get": {
+    "tags": [
+     "test-controller"
+    ],
+    "operationId": "info",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": {
+          "type": "object"
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/test/hello": {
+   "get": {
+    "tags": [
+     "test-controller"
+    ],
+    "operationId": "hello",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": {
+          "type": "object"
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/test/health": {
+   "get": {
+    "tags": [
+     "test-controller"
+    ],
+    "operationId": "health_1",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": {
+          "type": "object"
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/subcategory/category/{categoryId}": {
+   "get": {
+    "tags": [
+     "SubCategories"
+    ],
+    "summary": "Get subcategories of a category",
+    "operationId": "getByCategory",
+    "parameters": [
+     {
+      "name": "categoryId",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoListSubCategoryDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/settings/export": {
+   "get": {
+    "tags": [
+     "Settings"
+    ],
+    "summary": "Ayarları JSON metni olarak dışa aktar",
+    "operationId": "exportSettings",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoString"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/security/login-history": {
+   "get": {
+    "tags": [
+     "Security"
+    ],
+    "summary": "Giriş geçmişi (en yeni önce)",
+    "operationId": "getLoginHistory",
+    "parameters": [
+     {
+      "name": "pageNumber",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     },
+     {
+      "name": "pageSize",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoListLoginHistoryDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/security/info": {
+   "get": {
+    "tags": [
+     "Security"
+    ],
+    "summary": "Güvenlik özeti (son başarılı giriş, son 5 giriş)",
+    "operationId": "getSecurityInfo",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoSecurityDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/review/product/{productId}": {
+   "get": {
+    "tags": [
+     "Review Management"
+    ],
+    "summary": "Get reviews of a product",
+    "description": "Active reviews, newest first",
+    "operationId": "getProductReviews",
+    "parameters": [
+     {
+      "name": "productId",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoListReviewDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/review/product/{productId}/summary": {
+   "get": {
+    "tags": [
+     "Review Management"
+    ],
+    "summary": "Get review summary of a product",
+    "operationId": "getProductReviewSummary",
+    "parameters": [
+     {
+      "name": "productId",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoProductReviewSummaryDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/review/admin": {
+   "get": {
+    "tags": [
+     "Review Management"
+    ],
+    "summary": "Admin: all active reviews",
+    "description": "Newest first",
+    "operationId": "getAllReviews",
+    "parameters": [
+     {
+      "name": "pageNumber",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     },
+     {
+      "name": "pageSize",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoListReviewDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/product/search": {
+   "get": {
+    "tags": [
+     "Products"
+    ],
+    "summary": "Search products by name or description",
+    "operationId": "searchProducts",
+    "parameters": [
+     {
+      "name": "q",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoListProductDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/product/featured": {
+   "get": {
+    "tags": [
+     "Products"
+    ],
+    "summary": "Featured products",
+    "description": "Discount > 20% or added in the last 7 days",
+    "operationId": "getFeaturedProducts",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoListProductDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/product/discounted": {
+   "get": {
+    "tags": [
+     "Products"
+    ],
+    "summary": "Discounted products",
+    "description": "Highest discount first",
+    "operationId": "getDiscountedProducts",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoListProductDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/product/category/{categoryId}": {
+   "get": {
+    "tags": [
+     "Products"
+    ],
+    "summary": "Get products of a category",
+    "operationId": "getProductsByCategory",
+    "parameters": [
+     {
+      "name": "categoryId",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoListProductDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/paymentmethod/user/{userId}": {
+   "get": {
+    "tags": [
+     "Payment Method Management"
+    ],
+    "summary": "Get user payment methods",
+    "description": "Default first, then newest",
+    "operationId": "getUserPaymentMethods",
+    "parameters": [
+     {
+      "name": "userId",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoListPaymentMethodDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/order/{id}": {
+   "get": {
+    "tags": [
+     "Orders"
+    ],
+    "summary": "Get my order by ID",
+    "operationId": "getOrder",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoOrderDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/order/admin": {
+   "get": {
+    "tags": [
+     "Orders"
+    ],
+    "summary": "Admin: all orders",
+    "description": "Newest first",
+    "operationId": "getAllOrders",
+    "parameters": [
+     {
+      "name": "pageNumber",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     },
+     {
+      "name": "pageSize",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoListOrderDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/notification/user/{userId}": {
+   "get": {
+    "tags": [
+     "Notification"
+    ],
+    "summary": "Kullanıcının bildirimleri (yalnızca sahibi)",
+    "operationId": "getUserNotifications",
+    "parameters": [
+     {
+      "name": "userId",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     },
+     {
+      "name": "pageNumber",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     },
+     {
+      "name": "pageSize",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoListNotificationDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/notification/summary": {
+   "get": {
+    "tags": [
+     "Notification"
+    ],
+    "summary": "Toplam/okunmamış sayısı ve en yeni 5 bildirim",
+    "operationId": "getSummary",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoNotificationSummaryDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/notification/admin/user/{userId}": {
+   "get": {
+    "tags": [
+     "Notification"
+    ],
+    "summary": "Yönetici: bir kullanıcının bildirimleri",
+    "operationId": "adminGetUserNotifications",
+    "parameters": [
+     {
+      "name": "userId",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     },
+     {
+      "name": "pageNumber",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     },
+     {
+      "name": "pageSize",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoListNotificationDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/metrics/prometheus": {
+   "get": {
+    "tags": [
+     "metrics-controller"
+    ],
+    "operationId": "prometheus",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/metrics": {
+   "get": {
+    "tags": [
+     "metrics-controller"
+    ],
+    "operationId": "prometheus_1",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/metrics/custom": {
+   "get": {
+    "tags": [
+     "metrics-controller"
+    ],
+    "operationId": "custom",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": {
+          "type": "object"
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/helpsupport/tickets/admin": {
+   "get": {
+    "tags": [
+     "Help & Support"
+    ],
+    "summary": "Yönetici: tüm destek talepleri",
+    "operationId": "getAllTickets",
+    "parameters": [
+     {
+      "name": "pageNumber",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     },
+     {
+      "name": "pageSize",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoListSupportTicketDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/helpsupport/faqs": {
+   "get": {
+    "tags": [
+     "Help & Support"
+    ],
+    "summary": "Yayımlanmış SSS kayıtları",
+    "operationId": "getFaqs",
+    "parameters": [
+     {
+      "name": "category",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "pageNumber",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     },
+     {
+      "name": "pageSize",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "format": "int32"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoListFaqDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/helpsupport/articles/{articleId}": {
+   "get": {
+    "tags": [
+     "Help & Support"
+    ],
+    "summary": "Makale ayrıntısı (görüntülenme sayısı artar); yoksa 404 ARTICLE_NOT_FOUND",
+    "operationId": "getArticle",
+    "parameters": [
+     {
+      "name": "articleId",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoHelpArticleDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/health": {
+   "get": {
+    "tags": [
+     "health-controller"
+    ],
+    "operationId": "health_2",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": {
+          "type": "object"
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/health/ready": {
+   "get": {
+    "tags": [
+     "health-controller"
+    ],
+    "operationId": "readiness",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": {
+          "type": "object"
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/health/live": {
+   "get": {
+    "tags": [
+     "health-controller"
+    ],
+    "operationId": "liveness",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": {
+          "type": "object"
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/favorite": {
+   "get": {
+    "tags": [
+     "favorite-controller"
+    ],
+    "operationId": "getUserFavorites",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoListFavoriteDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/favorite/check/{productId}": {
+   "get": {
+    "tags": [
+     "favorite-controller"
+    ],
+    "operationId": "isProductInFavorites",
+    "parameters": [
+     {
+      "name": "productId",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoBoolean"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/cart": {
+   "get": {
+    "tags": [
+     "cart-controller"
+    ],
+    "operationId": "getCart",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoCartDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/cart/total": {
+   "get": {
+    "tags": [
+     "cart-controller"
+    ],
+    "operationId": "getTotal",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoBigDecimal"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/cart/count": {
+   "get": {
+    "tags": [
+     "cart-controller"
+    ],
+    "operationId": "getItemCount",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoInteger"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/campaign/active": {
+   "get": {
+    "tags": [
+     "Campaigns"
+    ],
+    "summary": "Get running campaigns",
+    "description": "Active and startDate <= now <= endDate",
+    "operationId": "getActiveCampaigns",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoListCampaignDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/address/user/{userId}": {
+   "get": {
+    "tags": [
+     "Address Management"
+    ],
+    "summary": "Get user addresses",
+    "description": "Default first, then newest",
+    "operationId": "getUserAddresses",
+    "parameters": [
+     {
+      "name": "userId",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoListAddressDto"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/": {
+   "get": {
+    "tags": [
+     "web-navigation-controller"
+    ],
+    "operationId": "root",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/favorite/remove/{productId}": {
+   "delete": {
+    "tags": [
+     "favorite-controller"
+    ],
+    "operationId": "removeFromFavorites",
+    "parameters": [
+     {
+      "name": "productId",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoString"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/favorite/clear": {
+   "delete": {
+    "tags": [
+     "favorite-controller"
+    ],
+    "operationId": "clearFavorites",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoString"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/cart/remove/{productId}": {
+   "delete": {
+    "tags": [
+     "cart-controller"
+    ],
+    "operationId": "removeFromCart",
+    "parameters": [
+     {
+      "name": "productId",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "format": "int64"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoBoolean"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/cart/clear": {
+   "delete": {
+    "tags": [
+     "cart-controller"
+    ],
+    "operationId": "clearCart",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoBoolean"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/error": {
+   "get": {
+    "tags": [
+     "json-error-controller"
+    ],
+    "operationId": "error",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoVoid"
+        }
+       }
+      }
+     }
+    }
+   },
+   "put": {
+    "tags": [
+     "json-error-controller"
+    ],
+    "operationId": "error_2",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoVoid"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "tags": [
+     "json-error-controller"
+    ],
+    "operationId": "error_1",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoVoid"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "tags": [
+     "json-error-controller"
+    ],
+    "operationId": "error_3",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoVoid"
+        }
+       }
+      }
+     }
+    }
+   },
+   "options": {
+    "tags": [
+     "json-error-controller"
+    ],
+    "operationId": "error_6",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoVoid"
+        }
+       }
+      }
+     }
+    }
+   },
+   "head": {
+    "tags": [
+     "json-error-controller"
+    ],
+    "operationId": "error_5",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoVoid"
+        }
+       }
+      }
+     }
+    }
+   },
+   "patch": {
+    "tags": [
+     "json-error-controller"
+    ],
+    "operationId": "error_4",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "*/*": {
+        "schema": {
+         "$ref": "#/components/schemas/BaseResponseDtoVoid"
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "components": {
+  "schemas": {
+   "UpdateSubCategoryDto": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "subCategoryName": {
+      "type": "string",
+      "maxLength": 100,
+      "minLength": 0
+     },
+     "description": {
+      "type": "string",
+      "maxLength": 500,
+      "minLength": 0
+     },
+     "imageUrl": {
+      "type": "string",
+      "maxLength": 200,
+      "minLength": 0
+     },
+     "categoryId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "isActive": {
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "categoryId",
+     "subCategoryName"
+    ]
+   },
+   "BaseResponseDtoSubCategoryDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "$ref": "#/components/schemas/SubCategoryDto"
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "SubCategoryDto": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "subCategoryName": {
+      "type": "string"
+     },
+     "description": {
+      "type": "string"
+     },
+     "imageUrl": {
+      "type": "string"
+     },
+     "categoryId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "categoryName": {
+      "type": "string"
+     },
+     "isActive": {
+      "type": "boolean"
+     },
+     "createdAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+     }
+    }
+   },
+   "UpdateUserSettingsDto": {
+    "type": "object",
+    "properties": {
+     "language": {
+      "type": "string",
+      "maxLength": 10,
+      "minLength": 0
+     },
+     "timezone": {
+      "type": "string",
+      "maxLength": 50,
+      "minLength": 0
+     },
+     "currency": {
+      "type": "string",
+      "maxLength": 10,
+      "minLength": 0
+     },
+     "emailNotifications": {
+      "type": "boolean"
+     },
+     "smsNotifications": {
+      "type": "boolean"
+     },
+     "pushNotifications": {
+      "type": "boolean"
+     },
+     "marketingEmails": {
+      "type": "boolean"
+     },
+     "orderUpdates": {
+      "type": "boolean"
+     },
+     "priceAlerts": {
+      "type": "boolean"
+     },
+     "stockNotifications": {
+      "type": "boolean"
+     },
+     "theme": {
+      "type": "string",
+      "maxLength": 20,
+      "minLength": 0
+     },
+     "itemsPerPage": {
+      "type": "integer",
+      "format": "int32",
+      "maximum": 100,
+      "minimum": 5
+     },
+     "autoSaveCart": {
+      "type": "boolean"
+     },
+     "showProductRecommendations": {
+      "type": "boolean"
+     },
+     "enableLocationServices": {
+      "type": "boolean"
+     }
+    }
+   },
+   "BaseResponseDtoUserSettingsDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "$ref": "#/components/schemas/UserSettingsDto"
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "UserSettingsDto": {
+    "type": "object",
+    "properties": {
+     "userId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "language": {
+      "type": "string"
+     },
+     "timezone": {
+      "type": "string"
+     },
+     "currency": {
+      "type": "string"
+     },
+     "emailNotifications": {
+      "type": "boolean"
+     },
+     "smsNotifications": {
+      "type": "boolean"
+     },
+     "pushNotifications": {
+      "type": "boolean"
+     },
+     "marketingEmails": {
+      "type": "boolean"
+     },
+     "orderUpdates": {
+      "type": "boolean"
+     },
+     "priceAlerts": {
+      "type": "boolean"
+     },
+     "stockNotifications": {
+      "type": "boolean"
+     },
+     "theme": {
+      "type": "string"
+     },
+     "itemsPerPage": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "autoSaveCart": {
+      "type": "boolean"
+     },
+     "showProductRecommendations": {
+      "type": "boolean"
+     },
+     "enableLocationServices": {
+      "type": "boolean"
+     },
+     "createdAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+     }
+    }
+   },
+   "UpdatePrivacySettingsDto": {
+    "type": "object",
+    "properties": {
+     "profileVisibility": {
+      "type": "boolean"
+     },
+     "showEmail": {
+      "type": "boolean"
+     },
+     "showPhone": {
+      "type": "boolean"
+     },
+     "allowDataCollection": {
+      "type": "boolean"
+     },
+     "allowAnalytics": {
+      "type": "boolean"
+     },
+     "allowCookies": {
+      "type": "boolean"
+     },
+     "allowMarketing": {
+      "type": "boolean"
+     },
+     "dataSharing": {
+      "type": "boolean"
+     }
+    }
+   },
+   "BaseResponseDtoPrivacySettingsDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "$ref": "#/components/schemas/PrivacySettingsDto"
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "PrivacySettingsDto": {
+    "type": "object",
+    "properties": {
+     "userId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "profileVisibility": {
+      "type": "boolean"
+     },
+     "showEmail": {
+      "type": "boolean"
+     },
+     "showPhone": {
+      "type": "boolean"
+     },
+     "allowDataCollection": {
+      "type": "boolean"
+     },
+     "allowAnalytics": {
+      "type": "boolean"
+     },
+     "allowCookies": {
+      "type": "boolean"
+     },
+     "allowMarketing": {
+      "type": "boolean"
+     },
+     "dataSharing": {
+      "type": "boolean"
+     },
+     "createdAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+     }
+    }
+   },
+   "SecuritySettingsDto": {
+    "type": "object",
+    "properties": {
+     "emailNotifications": {
+      "type": "boolean"
+     },
+     "smsNotifications": {
+      "type": "boolean"
+     },
+     "loginAlerts": {
+      "type": "boolean"
+     },
+     "twoFactorRequired": {
+      "type": "boolean"
+     },
+     "sessionTimeout": {
+      "type": "integer",
+      "format": "int32",
+      "maximum": 1440,
+      "minimum": 1
+     }
+    }
+   },
+   "BaseResponseDtoSecuritySettingsDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "$ref": "#/components/schemas/SecuritySettingsDto"
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "UpdateReviewDto": {
+    "type": "object",
+    "properties": {
+     "rating": {
+      "type": "integer",
+      "format": "int32",
+      "maximum": 5,
+      "minimum": 1
+     },
+     "title": {
+      "type": "string",
+      "maxLength": 200,
+      "minLength": 0
+     },
+     "comment": {
+      "type": "string",
+      "maxLength": 1000,
+      "minLength": 0
+     }
+    }
+   },
+   "BaseResponseDtoReviewDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "$ref": "#/components/schemas/ReviewDto"
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "ReviewDto": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "userId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "productId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "rating": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "title": {
+      "type": "string"
+     },
+     "comment": {
+      "type": "string"
+     },
+     "isVerified": {
+      "type": "boolean"
+     },
+     "isHelpful": {
+      "type": "boolean"
+     },
+     "userName": {
+      "type": "string"
+     },
+     "productName": {
+      "type": "string"
+     },
+     "createdAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+     }
+    }
+   },
+   "ProductRequestDto": {
+    "type": "object",
+    "properties": {
+     "productName": {
+      "type": "string",
+      "maxLength": 200,
+      "minLength": 2
+     },
+     "unitPrice": {
+      "type": "number",
+      "minimum": 0
+     },
+     "unitInStock": {
+      "type": "integer",
+      "format": "int32",
+      "minimum": 0
+     },
+     "quantityPerUnit": {
+      "type": "string",
+      "maxLength": 50,
+      "minLength": 0
+     },
+     "categoryId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "subCategoryId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "minLength": 0
+     },
+     "imageUrl": {
+      "type": "string",
+      "maxLength": 255,
+      "minLength": 0
+     },
+     "discount": {
+      "type": "integer",
+      "format": "int32",
+      "maximum": 100,
+      "minimum": 0
+     },
+     "isActive": {
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "categoryId",
+     "productName",
+     "quantityPerUnit",
+     "unitInStock",
+     "unitPrice"
+    ]
+   },
+   "BaseResponseDtoProductDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "$ref": "#/components/schemas/ProductDto"
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "ProductDto": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "productName": {
+      "type": "string"
+     },
+     "unitPrice": {
+      "type": "number"
+     },
+     "unitInStock": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "quantityPerUnit": {
+      "type": "string"
+     },
+     "categoryId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "categoryName": {
+      "type": "string"
+     },
+     "subCategoryId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "subCategoryName": {
+      "type": "string"
+     },
+     "description": {
+      "type": "string"
+     },
+     "imageUrl": {
+      "type": "string"
+     },
+     "discount": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "isActive": {
+      "type": "boolean"
+     },
+     "averageRating": {
+      "type": "number",
+      "format": "double"
+     },
+     "totalReviews": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "createdAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+     }
+    }
+   },
+   "UpdatePaymentMethodDto": {
+    "type": "object",
+    "properties": {
+     "type": {
+      "type": "string",
+      "maxLength": 50,
+      "minLength": 0
+     },
+     "cardHolderName": {
+      "type": "string",
+      "maxLength": 100,
+      "minLength": 0
+     },
+     "cardNumber": {
+      "type": "string",
+      "maxLength": 64,
+      "minLength": 0
+     },
+     "expiryMonth": {
+      "type": "integer",
+      "format": "int32",
+      "maximum": 12,
+      "minimum": 1
+     },
+     "expiryYear": {
+      "type": "integer",
+      "format": "int32",
+      "maximum": 2050,
+      "minimum": 2024
+     },
+     "cvv": {
+      "type": "string",
+      "maxLength": 10,
+      "minLength": 0
+     },
+     "bankName": {
+      "type": "string",
+      "maxLength": 100,
+      "minLength": 0
+     },
+     "accountNumber": {
+      "type": "string",
+      "maxLength": 50,
+      "minLength": 0
+     },
+     "accountHolderName": {
+      "type": "string",
+      "maxLength": 100,
+      "minLength": 0
+     },
+     "isDefault": {
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "cardHolderName",
+     "cardNumber",
+     "expiryMonth",
+     "expiryYear",
+     "type"
+    ]
+   },
+   "BaseResponseDtoPaymentMethodDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "$ref": "#/components/schemas/PaymentMethodDto"
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "PaymentMethodDto": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "userId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "type": {
+      "type": "string"
+     },
+     "cardHolderName": {
+      "type": "string"
+     },
+     "cardNumber": {
+      "type": "string"
+     },
+     "expiryMonth": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "expiryYear": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "bankName": {
+      "type": "string"
+     },
+     "accountNumber": {
+      "type": "string"
+     },
+     "accountHolderName": {
+      "type": "string"
+     },
+     "isDefault": {
+      "type": "boolean"
+     },
+     "isActive": {
+      "type": "boolean"
+     },
+     "createdAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+     }
+    }
+   },
+   "UpdateOrderStatusDto": {
+    "type": "object",
+    "properties": {
+     "status": {
+      "type": "string"
+     },
+     "notes": {
+      "type": "string"
+     }
+    },
+    "required": [
+     "status"
+    ]
+   },
+   "AddressDto": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "userId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "title": {
+      "type": "string"
+     },
+     "fullAddress": {
+      "type": "string"
+     },
+     "city": {
+      "type": "string"
+     },
+     "district": {
+      "type": "string"
+     },
+     "postalCode": {
+      "type": "string"
+     },
+     "country": {
+      "type": "string"
+     },
+     "isDefault": {
+      "type": "boolean"
+     },
+     "phoneNumber": {
+      "type": "string"
+     },
+     "createdAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+     }
+    }
+   },
+   "BaseResponseDtoOrderDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "$ref": "#/components/schemas/OrderDto"
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "OrderDto": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "orderNumber": {
+      "type": "string"
+     },
+     "userId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "userName": {
+      "type": "string"
+     },
+     "userEmail": {
+      "type": "string"
+     },
+     "items": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/OrderItemDto"
+      }
+     },
+     "subtotalAmount": {
+      "type": "number"
+     },
+     "shippingFee": {
+      "type": "number"
+     },
+     "totalAmount": {
+      "type": "number"
+     },
+     "status": {
+      "type": "string"
+     },
+     "notes": {
+      "type": "string"
+     },
+     "shippingAddress": {
+      "$ref": "#/components/schemas/AddressDto"
+     },
+     "billingAddress": {
+      "$ref": "#/components/schemas/AddressDto"
+     },
+     "paymentMethod": {
+      "$ref": "#/components/schemas/PaymentMethodDto"
+     },
+     "trackingNumber": {
+      "type": "string"
+     },
+     "carrier": {
+      "type": "string"
+     },
+     "shippedAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "deliveredAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "estimatedDeliveryAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "cancelReason": {
+      "type": "string"
+     },
+     "returnReason": {
+      "type": "string"
+     },
+     "returnRequestedAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "demoNextAction": {
+      "type": "string"
+     },
+     "createdAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+     }
+    }
+   },
+   "OrderItemDto": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "productId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "productName": {
+      "type": "string"
+     },
+     "productImageUrl": {
+      "type": "string"
+     },
+     "quantity": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "unitPrice": {
+      "type": "number"
+     },
+     "totalPrice": {
+      "type": "number"
+     }
+    }
+   },
+   "CancelOrderRequest": {
+    "type": "object",
+    "properties": {
+     "reason": {
+      "type": "string",
+      "maxLength": 500,
+      "minLength": 0
+     }
+    }
+   },
+   "BaseResponseDtoString": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "type": "string"
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "UpdateNotificationDto": {
+    "type": "object",
+    "properties": {
+     "isRead": {
+      "type": "boolean"
+     }
+    }
+   },
+   "BaseResponseDtoNotificationDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "$ref": "#/components/schemas/NotificationDto"
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "NotificationDto": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "userId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "title": {
+      "type": "string"
+     },
+     "message": {
+      "type": "string"
+     },
+     "type": {
+      "type": "string"
+     },
+     "actionUrl": {
+      "type": "string"
+     },
+     "isRead": {
+      "type": "boolean"
+     },
+     "readAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "isActive": {
+      "type": "boolean"
+     },
+     "createdAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+     }
+    }
+   },
+   "UpdateCategoryDto": {
+    "type": "object",
+    "properties": {
+     "categoryName": {
+      "type": "string",
+      "maxLength": 100,
+      "minLength": 0
+     },
+     "description": {
+      "type": "string",
+      "maxLength": 500,
+      "minLength": 0
+     },
+     "imageUrl": {
+      "type": "string",
+      "maxLength": 255,
+      "minLength": 0
+     },
+     "isActive": {
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "categoryName"
+    ]
+   },
+   "BaseResponseDtoCategoryDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "$ref": "#/components/schemas/CategoryDto"
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "CategoryDto": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "categoryName": {
+      "type": "string"
+     },
+     "description": {
+      "type": "string"
+     },
+     "imageUrl": {
+      "type": "string"
+     },
+     "isActive": {
+      "type": "boolean"
+     },
+     "createdAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+     }
+    }
+   },
+   "UpdateCartItemDto": {
+    "type": "object",
+    "properties": {
+     "productId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "quantity": {
+      "type": "integer",
+      "format": "int32"
+     }
+    }
+   },
+   "BaseResponseDtoCartDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "$ref": "#/components/schemas/CartDto"
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "CartDto": {
+    "type": "object",
+    "properties": {
+     "userId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "items": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/CartItemDto"
+      }
+     },
+     "totalItems": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "totalAmount": {
+      "type": "number"
+     },
+     "shippingFee": {
+      "type": "number"
+     },
+     "grandTotal": {
+      "type": "number"
+     },
+     "freeShippingRemainingTry": {
+      "type": "number"
+     }
+    }
+   },
+   "CartItemDto": {
+    "type": "object",
+    "properties": {
+     "productId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "productName": {
+      "type": "string"
+     },
+     "productImageUrl": {
+      "type": "string"
+     },
+     "unitPrice": {
+      "type": "number"
+     },
+     "quantity": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "totalPrice": {
+      "type": "number"
+     },
+     "isAvailable": {
+      "type": "boolean"
+     }
+    }
+   },
+   "CampaignRequestDto": {
+    "type": "object",
+    "properties": {
+     "title": {
+      "type": "string",
+      "maxLength": 200,
+      "minLength": 2
+     },
+     "subtitle": {
+      "type": "string",
+      "maxLength": 300,
+      "minLength": 0
+     },
+     "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "minLength": 0
+     },
+     "discount": {
+      "type": "integer",
+      "format": "int32",
+      "maximum": 100,
+      "minimum": 0
+     },
+     "imageUrl": {
+      "type": "string",
+      "maxLength": 255,
+      "minLength": 0
+     },
+     "backgroundColor": {
+      "type": "string",
+      "maxLength": 50,
+      "minLength": 0
+     },
+     "timeLeft": {
+      "type": "string",
+      "maxLength": 50,
+      "minLength": 0
+     },
+     "buttonText": {
+      "type": "string",
+      "maxLength": 50,
+      "minLength": 0
+     },
+     "buttonHref": {
+      "type": "string",
+      "maxLength": 255,
+      "minLength": 0
+     },
+     "startDate": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "endDate": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "isActive": {
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "endDate",
+     "startDate",
+     "title"
+    ]
+   },
+   "BaseResponseDtoCampaignDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "$ref": "#/components/schemas/CampaignDto"
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "CampaignDto": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "title": {
+      "type": "string"
+     },
+     "subtitle": {
+      "type": "string"
+     },
+     "description": {
+      "type": "string"
+     },
+     "discount": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "imageUrl": {
+      "type": "string"
+     },
+     "backgroundColor": {
+      "type": "string"
+     },
+     "timeLeft": {
+      "type": "string"
+     },
+     "buttonText": {
+      "type": "string"
+     },
+     "buttonHref": {
+      "type": "string"
+     },
+     "isActive": {
+      "type": "boolean"
+     },
+     "startDate": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "endDate": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "createdAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+     }
+    }
+   },
+   "UpdateAddressDto": {
+    "type": "object",
+    "properties": {
+     "title": {
+      "type": "string",
+      "maxLength": 100,
+      "minLength": 0
+     },
+     "fullAddress": {
+      "type": "string",
+      "maxLength": 500,
+      "minLength": 0
+     },
+     "city": {
+      "type": "string",
+      "maxLength": 100,
+      "minLength": 0
+     },
+     "district": {
+      "type": "string",
+      "maxLength": 100,
+      "minLength": 0
+     },
+     "postalCode": {
+      "type": "string",
+      "maxLength": 20,
+      "minLength": 0
+     },
+     "country": {
+      "type": "string",
+      "maxLength": 100,
+      "minLength": 0
+     },
+     "isDefault": {
+      "type": "boolean"
+     },
+     "phoneNumber": {
+      "type": "string",
+      "maxLength": 20,
+      "minLength": 0
+     }
+    },
+    "required": [
+     "city",
+     "district",
+     "fullAddress",
+     "postalCode",
+     "title"
+    ]
+   },
+   "BaseResponseDtoAddressDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "$ref": "#/components/schemas/AddressDto"
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "CreateSubCategoryDto": {
+    "type": "object",
+    "properties": {
+     "subCategoryName": {
+      "type": "string",
+      "maxLength": 100,
+      "minLength": 0
+     },
+     "description": {
+      "type": "string",
+      "maxLength": 500,
+      "minLength": 0
+     },
+     "imageUrl": {
+      "type": "string",
+      "maxLength": 200,
+      "minLength": 0
+     },
+     "categoryId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "isActive": {
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "categoryId",
+     "subCategoryName"
+    ]
+   },
+   "JsonNode": {
+    "type": "object"
+   },
+   "UpdateEmailDto": {
+    "type": "object",
+    "properties": {
+     "newEmail": {
+      "type": "string"
+     },
+     "currentPassword": {
+      "type": "string"
+     }
+    },
+    "required": [
+     "currentPassword",
+     "newEmail"
+    ]
+   },
+   "EnableTwoFactorDto": {
+    "type": "object",
+    "properties": {
+     "password": {
+      "type": "string"
+     }
+    },
+    "required": [
+     "password"
+    ]
+   },
+   "DisableTwoFactorDto": {
+    "type": "object",
+    "properties": {
+     "password": {
+      "type": "string"
+     },
+     "verificationCode": {
+      "type": "string"
+     }
+    },
+    "required": [
+     "password",
+     "verificationCode"
+    ]
+   },
+   "ChangePasswordDto": {
+    "type": "object",
+    "properties": {
+     "currentPassword": {
+      "type": "string"
+     },
+     "newPassword": {
+      "type": "string",
+      "maxLength": 100,
+      "minLength": 6
+     },
+     "confirmPassword": {
+      "type": "string"
+     }
+    },
+    "required": [
+     "confirmPassword",
+     "currentPassword",
+     "newPassword"
+    ]
+   },
+   "CreateReviewDto": {
+    "type": "object",
+    "properties": {
+     "productId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "rating": {
+      "type": "integer",
+      "format": "int32",
+      "maximum": 5,
+      "minimum": 1
+     },
+     "title": {
+      "type": "string",
+      "maxLength": 200,
+      "minLength": 0
+     },
+     "comment": {
+      "type": "string",
+      "maxLength": 1000,
+      "minLength": 0
+     }
+    },
+    "required": [
+     "productId",
+     "rating"
+    ]
+   },
+   "CreatePaymentMethodDto": {
+    "type": "object",
+    "properties": {
+     "type": {
+      "type": "string",
+      "maxLength": 50,
+      "minLength": 0
+     },
+     "cardHolderName": {
+      "type": "string",
+      "maxLength": 100,
+      "minLength": 0
+     },
+     "cardNumber": {
+      "type": "string",
+      "maxLength": 64,
+      "minLength": 0
+     },
+     "expiryMonth": {
+      "type": "integer",
+      "format": "int32",
+      "maximum": 12,
+      "minimum": 1
+     },
+     "expiryYear": {
+      "type": "integer",
+      "format": "int32",
+      "maximum": 2050,
+      "minimum": 2024
+     },
+     "cvv": {
+      "type": "string",
+      "maxLength": 10,
+      "minLength": 0
+     },
+     "bankName": {
+      "type": "string",
+      "maxLength": 100,
+      "minLength": 0
+     },
+     "accountNumber": {
+      "type": "string",
+      "maxLength": 50,
+      "minLength": 0
+     },
+     "accountHolderName": {
+      "type": "string",
+      "maxLength": 100,
+      "minLength": 0
+     },
+     "isDefault": {
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "cardHolderName",
+     "cardNumber",
+     "expiryMonth",
+     "expiryYear",
+     "type"
+    ]
+   },
+   "CreateOrderDto": {
+    "type": "object",
+    "properties": {
+     "shippingAddressId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "paymentMethodId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "items": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/CreateOrderItemDto"
+      },
+      "maxItems": 2147483647,
+      "minItems": 1
+     },
+     "notes": {
+      "type": "string",
+      "maxLength": 500,
+      "minLength": 0
+     }
+    },
+    "required": [
+     "items",
+     "paymentMethodId",
+     "shippingAddressId"
+    ]
+   },
+   "CreateOrderItemDto": {
+    "type": "object",
+    "properties": {
+     "productId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "quantity": {
+      "type": "integer",
+      "format": "int32",
+      "minimum": 1
+     }
+    },
+    "required": [
+     "productId",
+     "quantity"
+    ]
+   },
+   "ReturnRequestDto": {
+    "type": "object",
+    "properties": {
+     "reason": {
+      "type": "string",
+      "maxLength": 500,
+      "minLength": 0
+     }
+    },
+    "required": [
+     "reason"
+    ]
+   },
+   "CreateNotificationDto": {
+    "type": "object",
+    "properties": {
+     "userId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "title": {
+      "type": "string",
+      "maxLength": 200,
+      "minLength": 0
+     },
+     "message": {
+      "type": "string",
+      "maxLength": 1000,
+      "minLength": 0
+     },
+     "type": {
+      "type": "string",
+      "maxLength": 50,
+      "minLength": 0
+     },
+     "actionUrl": {
+      "type": "string",
+      "maxLength": 100,
+      "minLength": 0
+     }
+    },
+    "required": [
+     "message",
+     "title",
+     "type",
+     "userId"
+    ]
+   },
+   "CreateSupportTicketDto": {
+    "type": "object",
+    "properties": {
+     "subject": {
+      "type": "string",
+      "maxLength": 200,
+      "minLength": 0
+     },
+     "description": {
+      "type": "string",
+      "maxLength": 2000,
+      "minLength": 0
+     },
+     "category": {
+      "type": "string",
+      "maxLength": 50,
+      "minLength": 0
+     },
+     "priority": {
+      "type": "string",
+      "maxLength": 20,
+      "minLength": 0
+     }
+    },
+    "required": [
+     "category",
+     "description",
+     "subject"
+    ]
+   },
+   "BaseResponseDtoSupportTicketDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "$ref": "#/components/schemas/SupportTicketDto"
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "SupportMessageDto": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "ticketId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "userId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "userName": {
+      "type": "string"
+     },
+     "message": {
+      "type": "string"
+     },
+     "isFromSupport": {
+      "type": "boolean"
+     },
+     "createdAt": {
+      "type": "string",
+      "format": "date-time"
+     }
+    }
+   },
+   "SupportTicketDto": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "userId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "userName": {
+      "type": "string"
+     },
+     "subject": {
+      "type": "string"
+     },
+     "description": {
+      "type": "string"
+     },
+     "category": {
+      "type": "string"
+     },
+     "priority": {
+      "type": "string"
+     },
+     "status": {
+      "type": "string"
+     },
+     "assignedTo": {
+      "type": "string"
+     },
+     "createdAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "messages": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/SupportMessageDto"
+      }
+     }
+    }
+   },
+   "ContactFormDto": {
+    "type": "object",
+    "properties": {
+     "name": {
+      "type": "string",
+      "maxLength": 100,
+      "minLength": 0
+     },
+     "email": {
+      "type": "string"
+     },
+     "phone": {
+      "type": "string",
+      "maxLength": 20,
+      "minLength": 0
+     },
+     "subject": {
+      "type": "string",
+      "maxLength": 200,
+      "minLength": 0
+     },
+     "message": {
+      "type": "string",
+      "maxLength": 1000,
+      "minLength": 0
+     },
+     "category": {
+      "type": "string",
+      "maxLength": 50,
+      "minLength": 0
+     }
+    },
+    "required": [
+     "email",
+     "message",
+     "name",
+     "subject"
+    ]
+   },
+   "CreateHelpArticleDto": {
+    "type": "object",
+    "properties": {
+     "title": {
+      "type": "string",
+      "maxLength": 200,
+      "minLength": 0
+     },
+     "content": {
+      "type": "string"
+     },
+     "category": {
+      "type": "string",
+      "maxLength": 50,
+      "minLength": 0
+     },
+     "tags": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "isPublished": {
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "category",
+     "content",
+     "title"
+    ]
+   },
+   "BaseResponseDtoHelpArticleDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "$ref": "#/components/schemas/HelpArticleDto"
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "HelpArticleDto": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "title": {
+      "type": "string"
+     },
+     "content": {
+      "type": "string"
+     },
+     "category": {
+      "type": "string"
+     },
+     "tags": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "viewCount": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "isPublished": {
+      "type": "boolean"
+     },
+     "createdAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+     }
+    }
+   },
+   "AddToFavoritesDto": {
+    "type": "object",
+    "properties": {
+     "productId": {
+      "type": "integer",
+      "format": "int64"
+     }
+    }
+   },
+   "BaseResponseDtoFavoriteDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "$ref": "#/components/schemas/FavoriteDto"
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "FavoriteDto": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "userId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "productId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "productName": {
+      "type": "string"
+     },
+     "productImageUrl": {
+      "type": "string"
+     },
+     "productPrice": {
+      "type": "number"
+     },
+     "productDiscount": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "productCategory": {
+      "type": "string"
+     },
+     "productInStock": {
+      "type": "boolean"
+     },
+     "createdAt": {
+      "type": "string",
+      "format": "date-time"
+     }
+    }
+   },
+   "CreateCategoryDto": {
+    "type": "object",
+    "properties": {
+     "categoryName": {
+      "type": "string",
+      "maxLength": 100,
+      "minLength": 0
+     },
+     "description": {
+      "type": "string",
+      "maxLength": 500,
+      "minLength": 0
+     },
+     "imageUrl": {
+      "type": "string",
+      "maxLength": 255,
+      "minLength": 0
+     },
+     "isActive": {
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "categoryName"
+    ]
+   },
+   "AddToCartDto": {
+    "type": "object",
+    "properties": {
+     "productId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "quantity": {
+      "type": "integer",
+      "format": "int32"
+     }
+    }
+   },
+   "RegisterRequestDto": {
+    "type": "object",
+    "properties": {
+     "email": {
+      "type": "string"
+     },
+     "password": {
+      "type": "string",
+      "maxLength": 2147483647,
+      "minLength": 6
+     },
+     "firstName": {
+      "type": "string"
+     },
+     "lastName": {
+      "type": "string"
+     },
+     "phoneNumber": {
+      "type": "string"
+     },
+     "address": {
+      "type": "string"
+     },
+     "city": {
+      "type": "string"
+     },
+     "postalCode": {
+      "type": "string"
+     }
+    },
+    "required": [
+     "email",
+     "firstName",
+     "lastName",
+     "password"
+    ]
+   },
+   "AuthResponseDto": {
+    "type": "object",
+    "properties": {
+     "token": {
+      "type": "string"
+     },
+     "type": {
+      "type": "string"
+     },
+     "userId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "email": {
+      "type": "string"
+     },
+     "firstName": {
+      "type": "string"
+     },
+     "lastName": {
+      "type": "string"
+     },
+     "isEmailVerified": {
+      "type": "boolean"
+     },
+     "role": {
+      "type": "string"
+     }
+    }
+   },
+   "BaseResponseDtoAuthResponseDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "$ref": "#/components/schemas/AuthResponseDto"
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "LoginRequestDto": {
+    "type": "object",
+    "properties": {
+     "email": {
+      "type": "string"
+     },
+     "password": {
+      "type": "string"
+     }
+    },
+    "required": [
+     "email",
+     "password"
+    ]
+   },
+   "CreateAddressDto": {
+    "type": "object",
+    "properties": {
+     "title": {
+      "type": "string",
+      "maxLength": 100,
+      "minLength": 0
+     },
+     "fullAddress": {
+      "type": "string",
+      "maxLength": 500,
+      "minLength": 0
+     },
+     "city": {
+      "type": "string",
+      "maxLength": 100,
+      "minLength": 0
+     },
+     "district": {
+      "type": "string",
+      "maxLength": 100,
+      "minLength": 0
+     },
+     "postalCode": {
+      "type": "string",
+      "maxLength": 20,
+      "minLength": 0
+     },
+     "country": {
+      "type": "string",
+      "maxLength": 100,
+      "minLength": 0
+     },
+     "isDefault": {
+      "type": "boolean"
+     },
+     "phoneNumber": {
+      "type": "string",
+      "maxLength": 20,
+      "minLength": 0
+     }
+    },
+    "required": [
+     "city",
+     "district",
+     "fullAddress",
+     "postalCode",
+     "title"
+    ]
+   },
+   "BaseResponseDtoListSubCategoryDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/SubCategoryDto"
+      }
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "BaseResponseDtoListLoginHistoryDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/LoginHistoryDto"
+      }
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "LoginHistoryDto": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "loginAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "ipAddress": {
+      "type": "string"
+     },
+     "userAgent": {
+      "type": "string"
+     },
+     "location": {
+      "type": "string"
+     },
+     "isSuccessful": {
+      "type": "boolean"
+     }
+    }
+   },
+   "BaseResponseDtoSecurityDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "$ref": "#/components/schemas/SecurityDto"
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "SecurityDto": {
+    "type": "object",
+    "properties": {
+     "userId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "email": {
+      "type": "string"
+     },
+     "isEmailVerified": {
+      "type": "boolean"
+     },
+     "lastPasswordChange": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "twoFactorEnabled": {
+      "type": "boolean"
+     },
+     "lastLoginAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "lastLoginIp": {
+      "type": "string"
+     },
+     "recentLogins": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/LoginHistoryDto"
+      }
+     }
+    }
+   },
+   "BaseResponseDtoListReviewDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/ReviewDto"
+      }
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "BaseResponseDtoProductReviewSummaryDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "$ref": "#/components/schemas/ProductReviewSummaryDto"
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "ProductReviewSummaryDto": {
+    "type": "object",
+    "properties": {
+     "productId": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "averageRating": {
+      "type": "number",
+      "format": "double"
+     },
+     "totalReviews": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "rating1Count": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "rating2Count": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "rating3Count": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "rating4Count": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "rating5Count": {
+      "type": "integer",
+      "format": "int64"
+     }
+    }
+   },
+   "BaseResponseDtoPagedResultDtoProductDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "$ref": "#/components/schemas/PagedResultDtoProductDto"
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "PagedResultDtoProductDto": {
+    "type": "object",
+    "properties": {
+     "items": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/ProductDto"
+      }
+     },
+     "totalCount": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "pageNumber": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "pageSize": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "totalPages": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "hasPreviousPage": {
+      "type": "boolean"
+     },
+     "hasNextPage": {
+      "type": "boolean"
+     }
+    }
+   },
+   "BaseResponseDtoListProductDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/ProductDto"
+      }
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "BaseResponseDtoListPaymentMethodDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/PaymentMethodDto"
+      }
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "BaseResponseDtoListOrderDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/OrderDto"
+      }
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "BaseResponseDtoListNotificationDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/NotificationDto"
+      }
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "BaseResponseDtoNotificationSummaryDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "$ref": "#/components/schemas/NotificationSummaryDto"
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "NotificationSummaryDto": {
+    "type": "object",
+    "properties": {
+     "totalNotifications": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "unreadNotifications": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "recentNotifications": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/NotificationDto"
+      }
+     }
+    }
+   },
+   "BaseResponseDtoListSupportTicketDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/SupportTicketDto"
+      }
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "BaseResponseDtoListFaqDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/FaqDto"
+      }
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "FaqDto": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer",
+      "format": "int64"
+     },
+     "question": {
+      "type": "string"
+     },
+     "answer": {
+      "type": "string"
+     },
+     "category": {
+      "type": "string"
+     },
+     "viewCount": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "isPublished": {
+      "type": "boolean"
+     },
+     "createdAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+     }
+    }
+   },
+   "BaseResponseDtoListHelpArticleDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/HelpArticleDto"
+      }
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "BaseResponseDtoListFavoriteDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/FavoriteDto"
+      }
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "BaseResponseDtoBoolean": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "type": "boolean"
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "BaseResponseDtoListCategoryDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/CategoryDto"
+      }
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "BaseResponseDtoBigDecimal": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "type": "number"
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "BaseResponseDtoInteger": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "type": "integer",
+      "format": "int32"
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "BaseResponseDtoListCampaignDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/CampaignDto"
+      }
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "BaseResponseDtoListAddressDto": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/AddressDto"
+      }
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   },
+   "BaseResponseDtoVoid": {
+    "type": "object",
+    "properties": {
+     "success": {
+      "type": "boolean"
+     },
+     "message": {
+      "type": "string"
+     },
+     "data": {
+      "type": "object"
+     },
+     "error": {
+      "type": "string"
+     },
+     "errorCode": {
+      "type": "string"
+     },
+     "errors": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     "traceId": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "securitySchemes": {
+   "Bearer": {
+    "type": "http",
+    "description": "POST /api/auth/login cevabındaki token",
+    "scheme": "bearer",
+    "bearerFormat": "JWT"
+   }
+  }
+ }
+}

@@ -1,0 +1,89 @@
+# Docker Environment Configuration (full stack: Postgres + Redis + RabbitMQ)
+# 0.0.0.0: Docker Desktop / yayınlanan portların konteyner içi trafiğe düşmesi için gerekli (sadece 127.0.0.1 dinlenirse dışarıdan erişilemez)
+server:
+  address: 0.0.0.0
+  port: 8081
+
+app:
+  integration:
+    redis: true
+  messaging:
+    enabled: true
+  ecommerce:
+    demo-fulfillment-enabled: true
+
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/ecommerce_db
+    driver-class-name: org.postgresql.Driver
+    username: ecommerce_user
+    password: ecommerce_password
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 20000
+      idle-timeout: 300000
+      max-lifetime: 1200000
+
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:redis}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:rabbitmq}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:guest}
+    password: ${SPRING_RABBITMQ_PASSWORD:guest}
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          time_zone: UTC
+
+  # Migrasyonlar docker-compose içindeki flyway servisiyle (migrate tamamlanınca API başlar)
+  flyway:
+    enabled: false
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.ecommerce.backend: INFO
+    org.springframework.web: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
+    org.springframework.transaction: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [cid=%X{correlationId:-}] %logger{40} - %msg%n"
+
+management:
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+  health:
+    redis:
+      enabled: true
+    rabbit:
+      enabled: true
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+
+# Docker specific settings
+docker:
+  data-seeder:
+    enabled: false
+  swagger:
+    enabled: true
+  debug:
+    enabled: false

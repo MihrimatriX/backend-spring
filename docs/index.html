@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>E-Ticaret API (Spring Boot)</title>
+  <meta name="description" content="Spring Boot ile yazılmış e-ticaret REST API'si: ne işe yarar, nasıl çalıştırılır, içi nasıl kurulmuş.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=IBM+Plex+Mono:wght@400;600&display=swap">
+  <link rel="stylesheet" href="assets/site.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='3' y='7' width='26' height='20' rx='2' fill='%23c8924a' stroke='%2318263a' stroke-width='2'/><rect x='14' y='7' width='4' height='20' fill='%23f2c21b'/></svg>">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./">E-Ticaret API</a>
+    <nav aria-label="Site">
+      <a href="./" aria-current="page">Tanıtım</a>
+      <a href="api.html">API gezgini</a>
+      <a href="https://github.com/MihrimatriX/backend-spring/blob/main/docs/API_CONTRACT.md">Sözleşme</a>
+      <a href="https://github.com/MihrimatriX/backend-spring">GitHub</a>
+    </nav>
+  </header>
+
+  <div class="hero">
+    <div>
+      <h1>Pazaryeri vitrini için Spring Boot API'si</h1>
+      <p class="lede">Ürün kataloğu, sepet, sipariş, yorum ve bildirimler için bir REST API. Ön yüz ayrı bir depoda duruyor ve bu servise HTTP üzerinden bağlanıyor.</p>
+      <div class="actions">
+        <a class="button primary" href="#baslangic">Yerelde çalıştır</a>
+        <a class="button" href="api.html">Uç noktalara göz at</a>
+      </div>
+    </div>
+
+    <figure class="exchange" aria-label="Örnek sipariş isteği ve cevabı">
+<pre class="req"><span class="k">POST</span> /api/order
+Authorization: Bearer eyJhbGciOi…
+Idempotency-Key: 3f6c1e2a-checkout-01
+
+{ "shippingAddressId": 12, "paymentMethodId": 7,
+  "items": [{ "productId": 418, "quantity": 2 }] }</pre>
+<pre class="res"><span class="status-ok">201 Created</span>
+{ "success": true,
+  "message": "Siparişiniz alındı",
+  "data": { "orderNumber": "ORD-20261021-9C41B07E",
+            "status": "Pending",
+            "subtotalAmount": 129.90,
+            "shippingFee": 34.99,
+            "totalAmount": 164.89, … } }</pre>
+      <figcaption>Aynı <code>Idempotency-Key</code> ile tekrar gönderilen istek yeni sipariş açmaz, ilk siparişi 200 ile geri verir.</figcaption>
+    </figure>
+
+    <div class="track" aria-label="Sipariş durumları">
+      <div class="parcel" aria-hidden="true"></div>
+      <ol>
+        <li><strong>Pending</strong><span>Stok düşülmüş ve sepet boşaltılmıştır.</span></li>
+        <li><strong>Processing</strong><span>Hâlâ iptal edilebilir; iptalde stok geri döner.</span></li>
+        <li><strong>Shipped</strong><span>Kargo firması ve takip numarası atanır.</span></li>
+        <li><strong>Delivered</strong><span>Bu noktadan sonra iade talebi açılabilir.</span></li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="layout">
+    <aside class="toc" aria-label="İçindekiler">
+      <p>Bu sayfada</p>
+      <ul>
+        <li><a href="#amac">Ne işe yarar</a></li>
+        <li><a href="#baslangic">Yerelde çalıştırma</a></li>
+        <li><a href="#kullanim">API'yi kullanma</a></li>
+        <li><a href="#siparis">Sipariş akışı</a></li>
+        <li><a href="#yapi">Proje yapısı</a></li>
+        <li><a href="#uclar">Uç noktalar</a></li>
+        <li><a href="#ortamlar">Ortamlar ve ayarlar</a></li>
+        <li><a href="#test">Test</a></li>
+      </ul>
+    </aside>
+
+    <main>
+      <section id="amac">
+        <h2>Ne işe yarar</h2>
+        <p>Bu proje, Türkçe bir pazaryeri vitrininin ihtiyaç duyduğu sunucu tarafını sağlıyor. Kullanıcılar kayıt olup giriş yapıyor, ürünleri kategoriye, fiyata ya da isme göre süzüyor, sepete atıyor, kayıtlı adres ve kartla sipariş veriyor, sonra siparişi kargodan teslimata kadar izliyor. Yöneticiler de aynı API üzerinden katalogu, kampanyaları ve sipariş durumlarını yönetiyor.</p>
+        <p>Aynı sözleşmeyi uygulayan bir .NET sürümü de var. İki backend'in cevapları alan alan aynı olacak şekilde yazıldı; vitrin hangisine bağlanırsa bağlansın fark görmüyor. Kurallar <a href="https://github.com/MihrimatriX/backend-spring/blob/main/docs/API_CONTRACT.md">API sözleşmesinde</a> tek yerde toplanıyor.</p>
+        <div class="note"><p>GitHub Pages yalnızca statik dosya sunduğu için API burada çalışmaz. <a href="api.html">API gezgini</a> uygulamadan alınmış OpenAPI tanımını gösterir; istek atıp denemek için uygulamayı yerelde açmanız gerekir.</p></div>
+      </section>
+
+      <section id="baslangic">
+        <h2>Yerelde çalıştırma</h2>
+        <p>Geliştirme profili bellek içi H2 veritabanıyla açılır ve örnek veriyi kendisi yükler. Redis, RabbitMQ ya da PostgreSQL kurmanız gerekmez.</p>
+        <ol class="steps">
+          <li>
+            <p>JDK 17 kurulu olsun ve <code>JAVA_HOME</code> onu göstersin. Maven kurmanıza gerek yok, depodaki sarmalayıcı kendini indirir.</p>
+          </li>
+          <li>
+            <p>Depoyu klonlayıp uygulamayı başlatın:</p>
+<pre>git clone https://github.com/MihrimatriX/backend-spring.git
+cd backend-spring
+./mvnw spring-boot:run          # Windows: .\mvnw.cmd spring-boot:run</pre>
+          </li>
+          <li>
+            <p>Konsolda <code>Started EcommerceBackendApplication</code> satırı göründüğünde API <code>http://127.0.0.1:8081</code> adresinde dinliyordur. Swagger arayüzü <code>/swagger-ui.html</code>, H2 konsolu <code>/h2-console</code> altında açılır.</p>
+          </li>
+          <li>
+            <p>Hazır hesaplardan biriyle giriş yapın:</p>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>E-posta</th><th>Şifre</th><th>Rol</th></tr></thead>
+                <tbody>
+                  <tr><td><code>admin@example.com</code></td><td><code>admin123</code></td><td>Yönetici</td></tr>
+                  <tr><td><code>user1@example.com</code></td><td><code>user123</code></td><td>Müşteri</td></tr>
+                  <tr><td><code>user2@example.com</code></td><td><code>user123</code></td><td>Müşteri</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </li>
+        </ol>
+        <h3>Docker ile tam yığın</h3>
+        <p>PostgreSQL, Redis, RabbitMQ ve Flyway göçleriyle birlikte açmak isterseniz kök dizinde <code>docker compose up --build -d</code> yeterli. Host portlarını <code>.env.example</code> dosyasını <code>.env</code> olarak kopyalayıp değiştirebilirsiniz; API yine 8081'de açılır.</p>
+      </section>
+
+      <section id="kullanim">
+        <h2>API'yi kullanma</h2>
+        <p>Her uç <code>/api/</code> ile başlar ve aynı zarfla cevap verir: <code>success</code> ve <code>message</code> her zaman vardır, veri <code>data</code> içinde gelir. Hata durumunda <code>errorCode</code> makinenin, <code>message</code> insanın okuyacağı açıklamayı taşır; doğrulama hatalarında <code>errors</code> alan adına göre mesajları listeler.</p>
+<pre>curl -s -X POST http://127.0.0.1:8081/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user1@example.com","password":"user123"}'</pre>
+        <p>Cevaptaki <code>data.token</code> değerini sonraki isteklerde <code>Authorization: Bearer …</code> başlığıyla gönderin. Token 24 saat geçerlidir; <code>/api/security/logout-all-devices</code> çağrıldığında, o çağrıyı yapan token dışındakiler hemen geçersiz olur.</p>
+<pre>TOKEN=…   # girişten dönen değer
+curl -s http://127.0.0.1:8081/api/cart -H "Authorization: Bearer $TOKEN"</pre>
+        <p>Birkaç kural her uçta aynı işler:</p>
+        <ul>
+          <li>Tarihler UTC ve <code>Z</code> sonekiyle yazılır, örneğin <code>2026-10-02T10:54:48.689Z</code>.</li>
+          <li>Tutarlar TRY cinsinden ve iki ondalıklı sayıdır.</li>
+          <li>Sayfalı tek liste <code>GET /api/product</code>'tır; diğer listeler <code>pageNumber</code> ve <code>pageSize</code> alır, düz dizi döner.</li>
+          <li>IP başına dakikada 300 istek sınırı vardır. Aşıldığında 429 ve <code>Retry-After</code> başlığı gelir.</li>
+          <li>Her cevapta bir <code>X-Correlation-Id</code> bulunur. Hata bildirirken bu değeri paylaşırsanız ilgili log satırı hemen bulunur.</li>
+        </ul>
+      </section>
+
+      <section id="siparis">
+        <h2>Sipariş akışı</h2>
+        <p>Projenin en çok kural barındıran yeri sipariş oluşturma. <code>POST /api/order</code> şu sırayla ilerler, adımlardan biri başarısız olursa hiçbir şey kaydedilmez:</p>
+        <ol class="steps">
+          <li>
+            <p><code>Idempotency-Key</code> başlığı geldiyse kırpılıp küçük harfe çevrilir. Aynı kullanıcı bu anahtarla daha önce sipariş verdiyse o sipariş 200 ile döner, ikinci bir sipariş açılmaz.</p>
+          </li>
+          <li>
+            <p>Teslimat adresi ve ödeme yöntemi kullanıcıya ait ve aktif olmalı.</p>
+          </li>
+          <li>
+            <p>Kullanıcının sunucu tarafında dolu bir sepeti varsa istenen ürünler ve adetler sepetle birebir aynı olmalı. Bu kontrol, ödeme ekranı açıkken başka sekmede sepeti değiştiren kullanıcıyı yakalar.</p>
+          </li>
+          <li>
+            <p>Stok kontrol edilip düşülür. Ürünlerde iyimser kilit var: iki kişi son ürünü aynı anda alırsa biri başarılı olur, diğeri 409 alır.</p>
+          </li>
+          <li>
+            <p>Fiyat indirimli satış fiyatından hesaplanır. Ara toplam 150 TRY'nin altındaysa 34,99 TRY kargo eklenir.</p>
+          </li>
+          <li>
+            <p>Sipariş <code>Pending</code> olarak kaydedilir, sepet boşaltılır ve kullanıcıya "Sipariş alındı" bildirimi yazılır.</p>
+          </li>
+        </ol>
+        <p>Müşteri siparişi <code>Pending</code> ya da <code>Processing</code> durumundayken iptal edebilir; teslim edildikten sonra iade talebi açabilir. Yönetici durumu <code>PUT /api/order/{id}/status</code> ile değiştirir ve her değişiklikte kullanıcıya bildirim gider. Geliştirme profilinde siparişin sahibi <code>/demo/advance-fulfillment</code> ile kargo adımlarını kendisi ilerletebilir, böylece bir yönetici hesabına geçmeden siparişi teslim edildi durumuna kadar götürebilirsiniz.</p>
+      </section>
+
+      <section id="yapi">
+        <h2>Proje yapısı</h2>
+        <p>Kod üç pakete ayrılmış. Ayrım klasör düzeyinde; servisler repository'leri ve ayar sınıflarını doğrudan kullanıyor, araya ayrı bir arayüz katmanı konmamış.</p>
+        <div class="layers">
+          <div class="layer edge">
+            <h3>HTTP ve filtre zinciri</h3>
+            <p>Her istek korelasyon kimliği, güvenlik başlıkları, hız sınırı ve JWT doğrulama filtrelerinden geçip controller'a ulaşır.</p>
+          </div>
+          <div class="layer">
+            <h3>infrastructure</h3>
+            <p><code>web/controller</code> rotaları tanımlar, <code>security</code> JWT ve filtreleri, <code>repository</code> Spring Data JPA sorgularını, <code>config</code> CORS, önbellek ve Swagger ayarlarını, <code>messaging</code> RabbitMQ olaylarını, <code>data</code> de örnek veriyi içerir.</p>
+          </div>
+          <div class="layer">
+            <h3>application</h3>
+            <p><code>service</code> iş kurallarını, <code>dto</code> istek ve cevap modellerini taşır. <code>support</code> altında fiyat ve kargo hesabı, kart maskeleme, idempotency anahtarı gibi birden fazla servisin paylaştığı küçük parçalar var.</p>
+          </div>
+          <div class="layer">
+            <h3>domain</h3>
+            <p>JPA entity'leri: ürün, kategori, sipariş, sepet, yorum, kullanıcı ve diğerleri. Ortak alanlar (<code>id</code>, <code>createdAt</code>, <code>isActive</code>) <code>BaseEntity</code>'de durur.</p>
+          </div>
+        </div>
+        <p>Hata yönetimi tek yerde yapılıyor. Servisler bir kural ihlalinde <code>ApiException</code> fırlatıyor; <code>GlobalExceptionHandler</code> bunu doğru HTTP koduna ve zarfa çeviriyor. Controller metotları bu yüzden çoğunlukla tek satır: servisi çağırıp sonucu zarfa koyuyorlar.</p>
+<pre>src/main/java/com/ecommerce/backend/
+├── domain/entity/            JPA entity'leri
+├── application/
+│   ├── dto/                  istek ve cevap modelleri
+│   ├── service/              iş kuralları
+│   ├── support/              paylaşılan hesaplar (fiyat, kart, idempotency)
+│   └── exception/            ApiException
+└── infrastructure/
+    ├── config/               CORS, JWT, önbellek, Swagger, ayar sınıfları
+    ├── security/             filtreler ve JWT servisi
+    ├── repository/           Spring Data JPA
+    ├── web/                  controller'lar ve hata yakalayıcı
+    ├── messaging/            RabbitMQ (isteğe bağlı)
+    └── data/                 örnek veri yükleyiciler
+src/main/resources/db/migration/   Flyway göçleri (V1–V15)</pre>
+        <h3>Kullanılan teknolojiler</h3>
+        <p>Java 17 ve Spring Boot 3.4 (Web, Security, Data JPA, Validation, Actuator, Cache). Kimlik doğrulamada JJWT, API belgesinde springdoc-openapi, mesaj kuyruğunun dayanıklılığı için Resilience4j kullanılıyor. Üretimde PostgreSQL ve Flyway, geliştirmede H2 var. Redis ve RabbitMQ isteğe bağlı, ayarlardan kapatılabiliyor.</p>
+      </section>
+
+      <section id="uclar">
+        <h2>Uç noktalar</h2>
+        <p>Alanların ve hata kodlarının ayrıntısı <a href="api.html">API gezgininde</a> ve sözleşmede.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Yol</th><th>Ne yapar</th><th>Erişim</th></tr></thead>
+            <tbody>
+              <tr><td><code>/api/auth</code></td><td>Kayıt, giriş, çıkış</td><td>Herkes</td></tr>
+              <tr><td><code>/api/product</code></td><td>Filtreli ve sayfalı liste, arama, öne çıkanlar, indirimdekiler</td><td>Okuma herkese, yazma yöneticiye</td></tr>
+              <tr><td><code>/api/category</code>, <code>/api/subcategory</code></td><td>Katalog ağacı</td><td>Okuma herkese, yazma yöneticiye</td></tr>
+              <tr><td><code>/api/campaign</code></td><td>Vitrin kampanyaları, şu an yayında olanlar</td><td>Okuma herkese, yazma yöneticiye</td></tr>
+              <tr><td><code>/api/cart</code></td><td>Sunucu tarafı sepet ve kargo hesabı</td><td>Giriş yapan kullanıcı</td></tr>
+              <tr><td><code>/api/favorite</code></td><td>Favori ürünler</td><td>Giriş yapan kullanıcı</td></tr>
+              <tr><td><code>/api/address</code>, <code>/api/paymentmethod</code></td><td>Kayıtlı adresler ve kartlar (kart numarası maskeli saklanır)</td><td>Yalnızca sahibi</td></tr>
+              <tr><td><code>/api/order</code></td><td>Sipariş verme, izleme, iptal, iade; yönetici için durum güncelleme</td><td>Sahibi ve yönetici</td></tr>
+              <tr><td><code>/api/review</code></td><td>Ürün yorumları ve puan özeti</td><td>Okuma herkese, yazma sahibine</td></tr>
+              <tr><td><code>/api/notification</code></td><td>Kullanıcı bildirimleri</td><td>Sahibi ve yönetici</td></tr>
+              <tr><td><code>/api/security</code>, <code>/api/settings</code></td><td>Şifre ve e-posta değişikliği, giriş geçmişi, tercih ayarları</td><td>Giriş yapan kullanıcı</td></tr>
+              <tr><td><code>/api/helpsupport</code></td><td>Yardım makaleleri, SSS, destek talepleri</td><td>Karışık</td></tr>
+              <tr><td><code>/api/health</code>, <code>/api/metrics</code>, <code>/actuator</code></td><td>Sağlık kontrolü ve Prometheus metrikleri</td><td>Herkes</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="ortamlar">
+        <h2>Ortamlar ve ayarlar</h2>
+        <p>Profil <code>SPRING_PROFILES_ACTIVE</code> ile seçilir; varsayılanı <code>dev</code>.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Profil</th><th>Veritabanı</th><th>Notlar</th></tr></thead>
+            <tbody>
+              <tr><td><code>dev</code></td><td>H2, bellek içi</td><td>Örnek veri yüklenir, H2 konsolu ve demo kargo ilerletme açık, hata cevaplarında teknik ayrıntı var</td></tr>
+              <tr><td><code>docker</code></td><td>PostgreSQL + Flyway</td><td>Compose dosyasındaki servis adlarına bağlanır, demo kargo açık</td></tr>
+              <tr><td><code>prod</code></td><td>PostgreSQL + Flyway</td><td>Demo özellikleri kapalı, Redis önbelleği açık</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Sık değiştirilen ortam değişkenleri:</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Değişken</th><th>Ne için</th><th>Varsayılan</th></tr></thead>
+            <tbody>
+              <tr><td><code>JWT_SECRET</code></td><td>Token imzalama anahtarı. Üretimde mutlaka değiştirin.</td><td>Geliştirme anahtarı</td></tr>
+              <tr><td><code>ALLOWED_ORIGINS</code></td><td>CORS'a izin verilen ön yüz adresleri</td><td><code>localhost:3000</code>, <code>:5173</code>, <code>:8080</code></td></tr>
+              <tr><td><code>ADMIN_EMAILS</code></td><td>Yönetici rolü alacak e-postalar</td><td><code>admin@example.com</code>, <code>manager@shop.demo</code></td></tr>
+              <tr><td><code>RATE_LIMIT</code></td><td>IP başına dakikalık istek sınırı (0 kapatır)</td><td>300</td></tr>
+              <tr><td><code>DB_HOST</code>, <code>DB_NAME</code>, <code>DB_USERNAME</code>, <code>DB_PASSWORD</code></td><td>PostgreSQL bağlantısı</td><td>Profile göre</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Kargo eşiği ve ücreti <code>app.checkout.*</code>, demo kargo ilerletme <code>app.ecommerce.demo-fulfillment-enabled</code> ile ayarlanır.</p>
+      </section>
+
+      <section id="test">
+        <h2>Test</h2>
+        <p><code>./mvnw test</code> birim testleri, controller testlerini ve sipariş akışının entegrasyon testlerini çalıştırır. Entegrasyon testleri stok düşümünü, aynı idempotency anahtarıyla gelen tekrar isteğini ve aynı son ürün için yarışan iki siparişi kontrol eder.</p>
+        <p>Sözleşme uyumu için ayrıca bir duman testi var. Uygulama açıkken çalıştırıldığında yaklaşık 200 çağrının durum kodunu, hata kodunu ve JSON şeklini kontrol eder:</p>
+<pre>node scripts/contract-smoke.mjs run http://127.0.0.1:8081 out-spring.json</pre>
+        <p>.NET sürümü de açıksa iki çıktıyı <code>compare</code> komutuyla karşılaştırıp aradaki her farkı görebilirsiniz.</p>
+      </section>
+    </main>
+  </div>
+
+  <footer>
+    <p>Kaynak kod ve sorun bildirimi için <a href="https://github.com/MihrimatriX/backend-spring">GitHub deposu</a>.</p>
+  </footer>
+</body>
+</html>

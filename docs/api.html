@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>API gezgini (E-Ticaret API)</title>
+  <meta name="description" content="E-ticaret API'sinin tüm uç noktaları, istek ve cevap şemaları.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=IBM+Plex+Mono:wght@400;600&display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.17.14/swagger-ui.css">
+  <link rel="stylesheet" href="assets/site.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='3' y='7' width='26' height='20' rx='2' fill='%23c8924a' stroke='%2318263a' stroke-width='2'/><rect x='14' y='7' width='4' height='20' fill='%23f2c21b'/></svg>">
+  <style>
+    .intro { padding: 2rem clamp(1rem, 4vw, 3rem) 0; }
+    .intro h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); max-width: none; }
+    .intro p { color: var(--steel); }
+    /* Swagger UI kendi açık temasıyla çizilir; koyu modda da okunur kalsın diye beyaz zemin üzerinde durur. */
+    #swagger { background: #fff; color: #18263a; margin: 1.5rem clamp(0rem, 2vw, 1.5rem) 3rem; border-radius: 6px; }
+    #swagger .swagger-ui .topbar { display: none; }
+    #swagger .swagger-ui, #swagger .swagger-ui .info .title { font-family: "Archivo", system-ui, sans-serif; }
+    #swagger .swagger-ui .opblock .opblock-summary-path { font-family: "IBM Plex Mono", ui-monospace, monospace; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./">E-Ticaret API</a>
+    <nav aria-label="Site">
+      <a href="./">Tanıtım</a>
+      <a href="api.html" aria-current="page">API gezgini</a>
+      <a href="https://github.com/MihrimatriX/backend-spring/blob/main/docs/API_CONTRACT.md">Sözleşme</a>
+      <a href="https://github.com/MihrimatriX/backend-spring">GitHub</a>
+    </nav>
+  </header>
+
+  <div class="intro">
+    <h1>API gezgini</h1>
+    <p>Bu tanım çalışan uygulamadan alınmış bir kopya (<a href="openapi.json">openapi.json</a>). Uç noktaları, parametreleri ve şemaları buradan inceleyebilirsiniz. "Try it out" istekleri <code>http://127.0.0.1:8081</code> adresine gider; denemek için uygulamayı yerelde açın ve bu sitenin adresini <code>ALLOWED_ORIGINS</code> listesine ekleyin. Yoksa tarayıcı CORS nedeniyle isteği engeller.</p>
+    <noscript><p>Gezgin JavaScript gerektirir. Tanımı doğrudan <a href="openapi.json">openapi.json</a> dosyasından okuyabilirsiniz.</p></noscript>
+  </div>
+
+  <div id="swagger"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.17.14/swagger-ui-bundle.js" crossorigin></script>
+  <script>
+    window.addEventListener("load", function () {
+      SwaggerUIBundle({
+        url: "openapi.json",
+        dom_id: "#swagger",
+        deepLinking: true,
+        docExpansion: "none",
+        defaultModelsExpandDepth: 0,
+        tryItOutEnabled: false
+      });
+    });
+  </script>
+</body>
+</html>
